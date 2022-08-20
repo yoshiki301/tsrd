@@ -16,14 +16,23 @@ sample_mixture_exp <- function (
   range1 = c(0, 1),
   range2 = c(0, 1)
 ) {
+  if (lambda2 <= lambda1) {
+    stop("lambda2 should be greater than lambda1.")
+  }
+
   u <- runif(n)
   is_less <- ifelse(u < theta, 1L, 0L)
   n1 <- sum(is_less)
   n2 <- n - n1
-  t <- c(
-    rexp_range(n1, lambda1, range1),
-    rexp_range(n2, lambda2, range2)
-  )
+  if (lambda1 == 0) {
+    t <- rexp_range(n, lambda2, range2)
+  } else {
+    t <- c(
+      rexp_range(n1, lambda1, range1),
+      rexp_range(n2, lambda2, range2)
+    )
+  }
+
   return (t)
 }
 
