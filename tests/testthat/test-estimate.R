@@ -8,6 +8,7 @@ X_IcMt <- subset(
   X, induction == "Ic" & maintenance == "Mt",
   select = c(time, cens, t_judge, is_induction)
 )
+X_censored <- generate_scenario(sim_num = 1L, censor_rate = 0.3)
 
 # estimate results
 pi_IcMc <- calc_responsibility(
@@ -86,6 +87,12 @@ test_that("calc_loglikelihood_stage2 works", {
 
 test_that("estimateEM works", {
   estimator <- estimateEM(dataset = X, max_iter = 100L)
+  expect_type(estimator, "list")
+  expect_equal(all(diff(estimator$loglikelihood) >= 0.0), T) # monotonous
+})
+
+test_that("estimateEM for censored data works", {
+  estimator <- estimateEM(dataset = X_censored, max_iter = 100L)
   expect_type(estimator, "list")
   expect_equal(all(diff(estimator$loglikelihood) >= 0.0), T) # monotonous
 })

@@ -20,11 +20,21 @@ calc_responsibility <- function (
     is_I * dexp(time, lambda_I_nr) +
     (1 - is_I) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
   )
+  S_r <- (
+    is_I * 1.0 +
+    (1 - is_I) * S_r_judge * (1 - pexp(time - t_judge, lambda_IM_r))
+  )
+  S_nr <- (
+    is_I * (1 - pexp(time, lambda_I_nr)) +
+    (1 - is_I) * S_nr_judge * (1 - pexp(time - t_judge, lambda_IM_nr))
+  )
 
   observation <- theta * f_r / (
     theta * f_r + (1 - theta) * f_nr
   )
-  missing <- 0 # TODO: calculate the missing term
+  missing <- theta * S_r / (
+    theta * S_r + (1 - theta) * S_nr
+  )
   responsibility <- event * observation + (1 - event) * missing
   return (responsibility)
 }
@@ -36,7 +46,6 @@ update_theta <- function (
   pi_IMt
 ) {
   theta <- mean(c(pi_IMc, pi_IMt))
-  # TODO: calculate the missing term
   return (theta)
 }
 
@@ -49,12 +58,12 @@ update_lambda_I <- function (
   X_I <- rbind(X_IMc, X_IMt)
   pi_I <- c(pi_IMc, pi_IMt)
   time <- X_I$time
+  event <- X_I$cens
   t_judge <- X_I$t_judge
   is_I <- X_I$is_induction
-  lambda <- sum((1 - pi_I) * is_I) / sum(
+  lambda <- sum((1 - pi_I) * is_I * event) / sum(
     (1 - pi_I) * (is_I * time + (1 - is_I) * t_judge)
   )
-  # TODO: calculate the missing term
   return (lambda)
 }
 
@@ -63,11 +72,11 @@ update_lambda_IM <- function (
   pi_IM
 ) {
   time <- X_IM$time
+  event <- X_IM$cens
   t_judge <- X_IM$t_judge
   is_I <- X_IM$is_induction
-  lambda_r <- sum((1 - is_I) * pi_IM) / sum((1 - is_I) * pi_IM * (time - t_judge))
-  lambda_nr <- sum((1 - is_I) * (1 - pi_IM)) / sum((1 - is_I) * (1 - pi_IM) * (time - t_judge))
-  # TODO: calculate the missing term
+  lambda_r <- sum((1 - is_I) * event * pi_IM) / sum((1 - is_I) * pi_IM * (time - t_judge))
+  lambda_nr <- sum((1 - is_I) * event * (1 - pi_IM)) / sum((1 - is_I) * (1 - pi_IM) * (time - t_judge))
   return (list(
     r = lambda_r,
     nr = lambda_nr
@@ -84,7 +93,6 @@ calc_loglikelihood_stage1 <- function (
   time <- X_I$time
   is_I <- X_I$is_induction
   loglikelihood <- sum(is_I) * log(1 - theta) + sum(is_I * dexp(time, lambda_I_nr))
-  # TODO: calculate the missing term
   return (loglikelihood)
 }
 
@@ -105,7 +113,6 @@ calc_loglikelihood_stage2 <- function (
     (1 - theta) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
   ))
   loglikelihood[is.nan(loglikelihood)] <- 0.0 # fill induction's log-likelihoods
-  # TODO: calculate the missing term
   return (loglikelihood)
 }
 
