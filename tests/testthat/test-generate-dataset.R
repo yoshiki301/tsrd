@@ -1,13 +1,19 @@
 test_that("generate_scenario works", {
-  scenario <- generate_scenario(sim_num = 10L)
+  scenario <- generate_scenario(
+    sim_num = 10L,
+    IcMc_size = 20L,
+    IcMt_size = 30L,
+    ItMc_size = 40L,
+    ItMt_size = 50L
+  )
 
   time <- scenario$time
   expect_equal(sum(is.na(time)) == 0, T)
 
   expected_count <- data.frame(
-    induction = c("Ic", "It", "Ic", "It"),
-    maintenance = c("Mc", "Mc", "Mt", "Mt"),
-    Freq = c(10000L, 10000L, 10000L, 10000L)
+    induction = factor(c("Ic", "It", "Ic", "It")),
+    maintenance = factor(c("Mc", "Mc", "Mt", "Mt")),
+    Freq = c(200L, 400L, 300L, 500L)
   )
   actual_count <- as.data.frame(
     table(scenario[,c("induction", "maintenance")])

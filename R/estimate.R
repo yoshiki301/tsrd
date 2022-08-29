@@ -8,11 +8,21 @@ calc_responsibility <- function (
   time <- X_IM$time
   event <- X_IM$cens
   t_judge <- X_IM$t_judge
+  is_I <- X_IM$is_induction
+
   S_r_judge <- 1 - pexp(t_judge, 0)
   S_nr_judge <- 1 - pexp(t_judge, lambda_I_nr)
-  observation <- theta * S_r_judge * dexp(time - t_judge, lambda_IM_r) / (
-    theta * S_r_judge * dexp(time - t_judge, lambda_IM_r) +
-    (1 - theta) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
+  f_r <- (
+    is_I * 0.0 +
+    (1 - is_I) * lambda_IM_r * S_r_judge * exp(-lambda_IM_r * (time - t_judge))
+  )
+  f_nr <- (
+    is_I * lambda_I_nr * exp(-lambda_I_nr * time) +
+    (1 - is_I) * lambda_IM_nr * S_nr_judge * exp(-lambda_IM_nr * (time - t_judge))
+  )
+
+  observation <- theta * f_r / (
+    theta * f_r + (1 - theta) * f_nr
   )
   missing <- 0 # TODO: calculate the missing term
   responsibility <- event * observation + (1 - event) * missing
@@ -20,27 +30,29 @@ calc_responsibility <- function (
 }
 
 update_theta <- function (
-  X_I,
-  pi_IMc,
-  pi_IMt
-) {
-  theta <- sum(c(pi_IMc, pi_IMt)) / nrow(X_I)
-  # TODO: calculate the missing term
-  return (theta)
-}
-
-update_lambda_I <- function (
-  X_I,
   X_IMc,
   X_IMt,
   pi_IMc,
   pi_IMt
 ) {
+  theta <- mean(c(pi_IMc, pi_IMt))
+  # TODO: calculate the missing term
+  return (theta)
+}
+
+update_lambda_I <- function (
+  X_IMc,
+  X_IMt,
+  pi_IMc,
+  pi_IMt
+) {
+  X_I <- rbind(X_IMc, X_IMt)
+  pi_I <- c(pi_IMc, pi_IMt)
   time <- X_I$time
-  t_judge_Mc <- X_IMc$t_judge
-  t_judge_Mt <- X_IMt$t_judge
-  lambda <- length(time) / (
-    sum(time) + sum(t_judge_Mc * (1 - pi_IMc), t_judge_Mt * (1 - pi_IMt))
+  t_judge <- X_I$t_judge
+  is_I <- X_I$is_induction
+  lambda <- sum((1 - pi_I) * is_I) / sum(
+    is_I * time + (1 - is_I) * t_judge
   )
   # TODO: calculate the missing term
   return (lambda)
@@ -52,8 +64,9 @@ update_lambda_IM <- function (
 ) {
   time <- X_IM$time
   t_judge <- X_IM$t_judge
-  lambda_r <- sum(pi_IM) / sum(pi_IM * (time - t_judge))
-  lambda_nr <- sum(1 - pi_IM) / sum((1 - pi_IM) * (time - t_judge))
+  is_I <- X_IM$is_induction
+  lambda_r <- sum((1 - is_I) * pi_IM) / sum((1 - is_I) * pi_IM * (time - t_judge))
+  lambda_nr <- sum((1 - is_I) * (1 - pi_IM)) / sum((1 - is_I) * (1 - pi_IM) * (time - t_judge))
   # TODO: calculate the missing term
   return (list(
     r = lambda_r,
@@ -62,12 +75,15 @@ update_lambda_IM <- function (
 }
 
 calc_loglikelihood_stage1 <- function (
-  X_I,
+  X_IMc,
+  X_IMt,
   theta,
   lambda_I_nr
 ) {
+  X_I <- rbind(X_IMc, X_IMt)
   time <- X_I$time
-  loglikelihood <- nrow(X_I) * log(1 - theta) + sum(dexp(time, lambda_I_nr))
+  is_I <- X_I$is_induction
+  loglikelihood <- sum(is_I) * log(1 - theta) + sum(is_I * dexp(time, lambda_I_nr))
   # TODO: calculate the missing term
   return (loglikelihood)
 }
@@ -81,12 +97,14 @@ calc_loglikelihood_stage2 <- function (
 ) {
   time <- X_IM$time
   t_judge <- X_IM$t_judge
+  is_I <- X_IM$is_induction
   S_r_judge <- 1 - pexp(t_judge, 0)
   S_nr_judge <- 1 - pexp(t_judge, lambda_I_nr)
-  loglikelihood <- sum(log(
+  loglikelihood <- sum((1 - is_I) * log(
     theta * S_r_judge * dexp(time - t_judge, lambda_IM_r) +
     (1 - theta) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
   ))
+  loglikelihood[is.nan(loglikelihood)] <- 0.0 # fill induction's log-likelihoods
   # TODO: calculate the missing term
   return (loglikelihood)
 }
@@ -111,34 +129,20 @@ estimateEM <- function (
   # fixed data
   X_IcMc <- subset(
     dataset, induction == "Ic" & maintenance == "Mc",
-    select = c(time, cens, t_judge)
+    select = c(time, cens, t_judge, is_induction)
   )
   X_ItMc <- subset(
     dataset, induction == "It" & maintenance == "Mc",
-    select = c(time, cens, t_judge)
+    select = c(time, cens, t_judge, is_induction)
   )
   X_IcMt <- subset(
     dataset, induction == "Ic" & maintenance == "Mt",
-    select = c(time, cens, t_judge)
+    select = c(time, cens, t_judge, is_induction)
   )
   X_ItMt <- subset(
     dataset, induction == "It" & maintenance == "Mt",
-    select = c(time, cens, t_judge)
+    select = c(time, cens, t_judge, is_induction)
   )
-
-  X_IcMc_stage1 <- subset(X_IcMc, time <= t_judge)
-  X_IcMc_stage2 <- subset(X_IcMc, time > t_judge)
-  X_IcMt_stage1 <- subset(X_IcMt, time <= t_judge)
-  X_IcMt_stage2 <- subset(X_IcMt, time > t_judge)
-  X_ItMc_stage1 <- subset(X_ItMc, time <= t_judge)
-  X_ItMc_stage2 <- subset(X_ItMc, time > t_judge)
-  X_ItMt_stage1 <- subset(X_ItMt, time <= t_judge)
-  X_ItMt_stage2 <- subset(X_ItMt, time > t_judge)
-  X_Ic_stage1 <- rbind(X_IcMc_stage1, X_IcMt_stage1)
-  X_It_stage1 <- rbind(X_ItMc_stage1, X_ItMt_stage1)
-  X_Ic <- rbind(X_IcMc_stage1, X_IcMc_stage2, X_IcMt_stage1, X_IcMt_stage2)
-  X_It <- rbind(X_ItMc_stage1, X_ItMc_stage2, X_ItMt_stage1, X_ItMt_stage2)
-
 
   # parameters to be updated
   theta_Ic <- theta_Ic_init
@@ -163,44 +167,50 @@ estimateEM <- function (
   # define functions to update parameters and to calculate log-likelihood
   Estep <- function () {
     pi_IcMc <<- calc_responsibility(
-      X_IM = X_IcMc_stage2,
+      X_IM = X_IcMc,
       theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
       lambda_IM_r = lambda_IcMc_r, lambda_IM_nr = lambda_IcMc_nr
     )
     pi_IcMt <<- calc_responsibility(
-      X_IM = X_IcMt_stage2,
+      X_IM = X_IcMt,
       theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
       lambda_IM_r = lambda_IcMt_r, lambda_IM_nr = lambda_IcMt_nr
     )
     pi_ItMc <<- calc_responsibility(
-      X_IM = X_ItMc_stage2,
+      X_IM = X_ItMc,
       theta = theta_It, lambda_I_nr = lambda_It_nr,
       lambda_IM_r = lambda_ItMc_r, lambda_IM_nr = lambda_ItMc_nr
     )
     pi_ItMt <<- calc_responsibility(
-      X_IM = X_ItMt_stage2,
+      X_IM = X_ItMt,
       theta = theta_It, lambda_I_nr = lambda_It_nr,
       lambda_IM_r = lambda_ItMt_r, lambda_IM_nr = lambda_ItMt_nr
     )
   }
 
   Mstep <- function () {
-    theta_Ic <<- update_theta(X_I = X_Ic, pi_IMc = pi_IcMc, pi_IMt = pi_IcMt)
-    theta_It <<- update_theta(X_I = X_It, pi_IMc = pi_ItMc, pi_IMt = pi_ItMt)
-
-    lambda_Ic_nr <<- update_lambda_I(
-      X_I = X_Ic_stage1, X_IMc = X_IcMc_stage2, X_IMt = X_IcMt_stage2,
+    theta_Ic <<- update_theta(
+      X_IMc = X_IcMc, X_IMt = X_IcMt,
       pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
     )
-    lambda_It_nr <<- update_lambda_I(
-      X_I = X_It_stage1, X_IMc = X_ItMc_stage2, X_IMt = X_ItMt_stage2,
+    theta_It <<- update_theta(
+      X_IMc = X_ItMc, X_IMt = X_ItMt,
       pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
     )
 
-    lambda_IcMc <- update_lambda_IM(X_IM = X_IcMc_stage2, pi_IM = pi_IcMc)
-    lambda_ItMc <- update_lambda_IM(X_IM = X_ItMc_stage2, pi_IM = pi_ItMc)
-    lambda_IcMt <- update_lambda_IM(X_IM = X_IcMt_stage2, pi_IM = pi_IcMt)
-    lambda_ItMt <- update_lambda_IM(X_IM = X_ItMt_stage2, pi_IM = pi_ItMt)
+    lambda_Ic_nr <<- update_lambda_I(
+      X_IMc = X_IcMc, X_IMt = X_IcMt,
+      pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
+    )
+    lambda_It_nr <<- update_lambda_I(
+      X_IMc = X_ItMc, X_IMt = X_ItMt,
+      pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
+    )
+
+    lambda_IcMc <- update_lambda_IM(X_IM = X_IcMc, pi_IM = pi_IcMc)
+    lambda_ItMc <- update_lambda_IM(X_IM = X_ItMc, pi_IM = pi_ItMc)
+    lambda_IcMt <- update_lambda_IM(X_IM = X_IcMt, pi_IM = pi_IcMt)
+    lambda_ItMt <- update_lambda_IM(X_IM = X_ItMt, pi_IM = pi_ItMt)
     lambda_IcMc_r <<- lambda_IcMc$r
     lambda_IcMc_nr <<- lambda_IcMc$nr
     lambda_ItMc_r <<- lambda_ItMc$r
@@ -214,25 +224,27 @@ estimateEM <- function (
   calc_loglikelihood <- function () {
     loglikelihood <- (
       calc_loglikelihood_stage1(
-        X_I = X_Ic_stage1, theta = theta_Ic, lambda_I_nr = lambda_Ic_nr
+        X_IMc = X_IcMc, X_IMt = X_IcMt,
+        theta = theta_Ic, lambda_I_nr = lambda_Ic_nr
       ) +
       calc_loglikelihood_stage1(
-        X_I = X_It_stage1, theta = theta_It, lambda_I_nr = lambda_It_nr
+        X_IMc = X_ItMc, X_IMt = X_ItMt,
+        theta = theta_It, lambda_I_nr = lambda_It_nr
       ) +
       calc_loglikelihood_stage2(
-        X_IM = X_IcMc_stage2, theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
+        X_IM = X_IcMc, theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
         lambda_IM_r = lambda_IcMc_r, lambda_IM_nr = lambda_IcMc_nr
       ) +
       calc_loglikelihood_stage2(
-        X_IM = X_ItMc_stage2, theta = theta_It, lambda_I_nr = lambda_It_nr,
+        X_IM = X_ItMc, theta = theta_It, lambda_I_nr = lambda_It_nr,
         lambda_IM_r = lambda_ItMc_r, lambda_IM_nr = lambda_ItMc_nr
       ) +
       calc_loglikelihood_stage2(
-        X_IM = X_IcMt_stage2, theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
+        X_IM = X_IcMt, theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
         lambda_IM_r = lambda_IcMt_r, lambda_IM_nr = lambda_IcMt_nr
       ) +
       calc_loglikelihood_stage2(
-        X_IM = X_ItMt_stage2, theta = theta_It, lambda_I_nr = lambda_It_nr,
+        X_IM = X_ItMt, theta = theta_It, lambda_I_nr = lambda_It_nr,
         lambda_IM_r = lambda_ItMt_r, lambda_IM_nr = lambda_ItMt_nr
       )
     )
