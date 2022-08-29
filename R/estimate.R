@@ -14,11 +14,11 @@ calc_responsibility <- function (
   S_nr_judge <- 1 - pexp(t_judge, lambda_I_nr)
   f_r <- (
     is_I * 0.0 +
-    (1 - is_I) * lambda_IM_r * S_r_judge * exp(-lambda_IM_r * (time - t_judge))
+    (1 - is_I) * S_r_judge * dexp(time - t_judge, lambda_IM_r)
   )
   f_nr <- (
-    is_I * lambda_I_nr * exp(-lambda_I_nr * time) +
-    (1 - is_I) * lambda_IM_nr * S_nr_judge * exp(-lambda_IM_nr * (time - t_judge))
+    is_I * dexp(time, lambda_I_nr) +
+    (1 - is_I) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
   )
 
   observation <- theta * f_r / (
@@ -52,7 +52,7 @@ update_lambda_I <- function (
   t_judge <- X_I$t_judge
   is_I <- X_I$is_induction
   lambda <- sum((1 - pi_I) * is_I) / sum(
-    is_I * time + (1 - is_I) * t_judge
+    (1 - pi_I) * (is_I * time + (1 - is_I) * t_judge)
   )
   # TODO: calculate the missing term
   return (lambda)
