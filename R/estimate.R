@@ -116,6 +116,7 @@ calc_loglikelihood_stage2 <- function (
   return (loglikelihood)
 }
 
+#' @export
 estimateEM <- function (
   dataset,
   theta_Ic_init = 0.65,
@@ -131,7 +132,8 @@ estimateEM <- function (
   lambda_ItMt_r_init = 0.04,
   lambda_ItMt_nr_init = 0.08,
   max_iter = 5000L,
-  eps = 1e-5
+  eps = 1e-5,
+  option = NULL
 ) {
   # fixed data
   X_IcMc <- subset(
@@ -150,6 +152,12 @@ estimateEM <- function (
     dataset, induction == "It" & maintenance == "Mt",
     select = c(time, cens, t_judge, is_induction)
   )
+  true_theta_Ic <- subset(
+    dataset, induction == "Ic", select = theta
+  )[1,1]
+  true_theta_It <- subset(
+    dataset, induction == "It", select = theta
+  )[1,1]
 
   # parameters to be updated
   theta_Ic <- theta_Ic_init
@@ -172,60 +180,116 @@ estimateEM <- function (
 
 
   # define functions to update parameters and to calculate log-likelihood
-  Estep <- function () {
-    pi_IcMc <<- calc_responsibility(
-      X_IM = X_IcMc,
-      theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
-      lambda_IM_r = lambda_IcMc_r, lambda_IM_nr = lambda_IcMc_nr
-    )
-    pi_IcMt <<- calc_responsibility(
-      X_IM = X_IcMt,
-      theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
-      lambda_IM_r = lambda_IcMt_r, lambda_IM_nr = lambda_IcMt_nr
-    )
-    pi_ItMc <<- calc_responsibility(
-      X_IM = X_ItMc,
-      theta = theta_It, lambda_I_nr = lambda_It_nr,
-      lambda_IM_r = lambda_ItMc_r, lambda_IM_nr = lambda_ItMc_nr
-    )
-    pi_ItMt <<- calc_responsibility(
-      X_IM = X_ItMt,
-      theta = theta_It, lambda_I_nr = lambda_It_nr,
-      lambda_IM_r = lambda_ItMt_r, lambda_IM_nr = lambda_ItMt_nr
-    )
-  }
+  if (is.null(option)) {
+    # default EM algorithm
+    Estep <- function () {
+      pi_IcMc <<- calc_responsibility(
+        X_IM = X_IcMc,
+        theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
+        lambda_IM_r = lambda_IcMc_r, lambda_IM_nr = lambda_IcMc_nr
+      )
+      pi_IcMt <<- calc_responsibility(
+        X_IM = X_IcMt,
+        theta = theta_Ic, lambda_I_nr = lambda_Ic_nr,
+        lambda_IM_r = lambda_IcMt_r, lambda_IM_nr = lambda_IcMt_nr
+      )
+      pi_ItMc <<- calc_responsibility(
+        X_IM = X_ItMc,
+        theta = theta_It, lambda_I_nr = lambda_It_nr,
+        lambda_IM_r = lambda_ItMc_r, lambda_IM_nr = lambda_ItMc_nr
+      )
+      pi_ItMt <<- calc_responsibility(
+        X_IM = X_ItMt,
+        theta = theta_It, lambda_I_nr = lambda_It_nr,
+        lambda_IM_r = lambda_ItMt_r, lambda_IM_nr = lambda_ItMt_nr
+      )
+    }
 
-  Mstep <- function () {
-    theta_Ic <<- update_theta(
-      X_IMc = X_IcMc, X_IMt = X_IcMt,
-      pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
-    )
-    theta_It <<- update_theta(
-      X_IMc = X_ItMc, X_IMt = X_ItMt,
-      pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
-    )
+    Mstep <- function () {
+      theta_Ic <<- update_theta(
+        X_IMc = X_IcMc, X_IMt = X_IcMt,
+        pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
+      )
+      theta_It <<- update_theta(
+        X_IMc = X_ItMc, X_IMt = X_ItMt,
+        pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
+      )
 
-    lambda_Ic_nr <<- update_lambda_I(
-      X_IMc = X_IcMc, X_IMt = X_IcMt,
-      pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
-    )
-    lambda_It_nr <<- update_lambda_I(
-      X_IMc = X_ItMc, X_IMt = X_ItMt,
-      pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
-    )
+      lambda_Ic_nr <<- update_lambda_I(
+        X_IMc = X_IcMc, X_IMt = X_IcMt,
+        pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
+      )
+      lambda_It_nr <<- update_lambda_I(
+        X_IMc = X_ItMc, X_IMt = X_ItMt,
+        pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
+      )
 
-    lambda_IcMc <- update_lambda_IM(X_IM = X_IcMc, pi_IM = pi_IcMc)
-    lambda_ItMc <- update_lambda_IM(X_IM = X_ItMc, pi_IM = pi_ItMc)
-    lambda_IcMt <- update_lambda_IM(X_IM = X_IcMt, pi_IM = pi_IcMt)
-    lambda_ItMt <- update_lambda_IM(X_IM = X_ItMt, pi_IM = pi_ItMt)
-    lambda_IcMc_r <<- lambda_IcMc$r
-    lambda_IcMc_nr <<- lambda_IcMc$nr
-    lambda_ItMc_r <<- lambda_ItMc$r
-    lambda_ItMc_nr <<- lambda_ItMc$nr
-    lambda_IcMt_r <<- lambda_IcMt$r
-    lambda_IcMt_nr <<- lambda_IcMt$nr
-    lambda_ItMt_r <<- lambda_ItMt$r
-    lambda_ItMt_nr <<- lambda_ItMt$nr
+      lambda_IcMc <- update_lambda_IM(X_IM = X_IcMc, pi_IM = pi_IcMc)
+      lambda_ItMc <- update_lambda_IM(X_IM = X_ItMc, pi_IM = pi_ItMc)
+      lambda_IcMt <- update_lambda_IM(X_IM = X_IcMt, pi_IM = pi_IcMt)
+      lambda_ItMt <- update_lambda_IM(X_IM = X_ItMt, pi_IM = pi_ItMt)
+      lambda_IcMc_r <<- lambda_IcMc$r
+      lambda_IcMc_nr <<- lambda_IcMc$nr
+      lambda_ItMc_r <<- lambda_ItMc$r
+      lambda_ItMc_nr <<- lambda_ItMc$nr
+      lambda_IcMt_r <<- lambda_IcMt$r
+      lambda_IcMt_nr <<- lambda_IcMt$nr
+      lambda_ItMt_r <<- lambda_ItMt$r
+      lambda_ItMt_nr <<- lambda_ItMt$nr
+    }
+  } else if (option == "fix_theta") {
+    # method to fix theta
+    theta_Ic <- true_theta_Ic
+    theta_It <- true_theta_It
+
+    Estep <- function () {
+      pi_IcMc <<- calc_responsibility(
+        X_IM = X_IcMc,
+        theta = true_theta_Ic, lambda_I_nr = lambda_Ic_nr,
+        lambda_IM_r = lambda_IcMc_r, lambda_IM_nr = lambda_IcMc_nr
+      )
+      pi_IcMt <<- calc_responsibility(
+        X_IM = X_IcMt,
+        theta = true_theta_Ic, lambda_I_nr = lambda_Ic_nr,
+        lambda_IM_r = lambda_IcMt_r, lambda_IM_nr = lambda_IcMt_nr
+      )
+      pi_ItMc <<- calc_responsibility(
+        X_IM = X_ItMc,
+        theta = true_theta_It, lambda_I_nr = lambda_It_nr,
+        lambda_IM_r = lambda_ItMc_r, lambda_IM_nr = lambda_ItMc_nr
+      )
+      pi_ItMt <<- calc_responsibility(
+        X_IM = X_ItMt,
+        theta = true_theta_It, lambda_I_nr = lambda_It_nr,
+        lambda_IM_r = lambda_ItMt_r, lambda_IM_nr = lambda_ItMt_nr
+      )
+    }
+
+    Mstep <- function () {
+      lambda_Ic_nr <<- update_lambda_I(
+        X_IMc = X_IcMc, X_IMt = X_IcMt,
+        pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
+      )
+      lambda_It_nr <<- update_lambda_I(
+        X_IMc = X_ItMc, X_IMt = X_ItMt,
+        pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
+      )
+
+      lambda_IcMc <- update_lambda_IM(X_IM = X_IcMc, pi_IM = pi_IcMc)
+      lambda_ItMc <- update_lambda_IM(X_IM = X_ItMc, pi_IM = pi_ItMc)
+      lambda_IcMt <- update_lambda_IM(X_IM = X_IcMt, pi_IM = pi_IcMt)
+      lambda_ItMt <- update_lambda_IM(X_IM = X_ItMt, pi_IM = pi_ItMt)
+      lambda_IcMc_r <<- lambda_IcMc$r
+      lambda_IcMc_nr <<- lambda_IcMc$nr
+      lambda_ItMc_r <<- lambda_ItMc$r
+      lambda_ItMc_nr <<- lambda_ItMc$nr
+      lambda_IcMt_r <<- lambda_IcMt$r
+      lambda_IcMt_nr <<- lambda_IcMt$nr
+      lambda_ItMt_r <<- lambda_ItMt$r
+      lambda_ItMt_nr <<- lambda_ItMt$nr
+    }
+  } else {
+    stop("option parameter is invalid.")
   }
 
   calc_loglikelihood <- function () {

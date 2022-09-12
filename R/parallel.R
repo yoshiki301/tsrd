@@ -1,3 +1,4 @@
+#' @export
 estimate_parallely <- function (
   dataset,
   num_cores,
@@ -15,10 +16,11 @@ estimate_parallely <- function (
   lambda_ItMt_r_init = 0.04,
   lambda_ItMt_nr_init = 0.08,
   max_iter = 5000L,
-  eps = 1e-5
+  eps = 1e-5,
+  option = NULL
 ) {
   # prepare for parallel computing
-  exported_args <- formalArgs(estimateEM)[2:15]
+  exported_args <- formalArgs(estimateEM)[2:16]
   env <- environment()
   max_cores <- parallel::detectCores()
   if (max_cores < num_cores) {
@@ -62,7 +64,8 @@ estimate_parallely <- function (
       lambda_ItMt_r_init = lambda_ItMt_r_init,
       lambda_ItMt_nr_init = lambda_ItMt_nr_init,
       max_iter = max_iter,
-      eps = eps
+      eps = eps,
+      option = option
     )
     estimator <- data.frame(
       theta_Ic = e$theta_Ic,

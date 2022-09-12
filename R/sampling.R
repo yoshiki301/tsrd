@@ -36,6 +36,7 @@ sample_mixture_exp <- function (
   return (t)
 }
 
+#' @export
 sample_tsrd_dataset <- function (
   n,
   t_judge,

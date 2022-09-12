@@ -1,3 +1,4 @@
+#' @export
 generate_scenario <- function (
   sim_num = 1000L,
   t_judge = 6,

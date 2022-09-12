@@ -96,3 +96,18 @@ test_that("estimateEM for censored data works", {
   expect_type(estimator, "list")
   expect_equal(all(diff(estimator$loglikelihood) >= 0.0), T) # monotonous
 })
+
+test_that("estimateEM to fix theta", {
+  estimator <- estimateEM(dataset = X, max_iter = 100L, option = "fix_theta")
+  expect_type(estimator, "list")
+  expect_equal(all(diff(estimator$loglikelihood) >= 0.0), T) # monotonous
+  expect_equal(estimator$theta_Ic[1], 0.65)
+  expect_equal(estimator$theta_It[1], 0.75)
+})
+
+test_that("error in estimateEM", {
+  expect_error(
+    estimateEM(dataset = X, max_iter = 100L, option = "invalid_option_param"),
+    "option parameter is invalid."
+  )
+})
