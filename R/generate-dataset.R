@@ -1,3 +1,7 @@
+#' Generate datasets in one scenario
+#'
+#' This function is to generate datasets with true parameters in each treatment group.
+#' Each dataset consists of survival time, censoring status, and treatment assignment.
 #' @export
 generate_scenario <- function (
   sim_num = 1000L,

@@ -1,3 +1,8 @@
+#' Parameter estimation by parallel computing
+#'
+#' This function is to estimate parameters by parallel computing.
+#' Full dataset from generate_scenario is used in estimation.
+#' Parallel computing is implemented by parallel package functions.
 #' @export
 estimate_parallely <- function (
   dataset,

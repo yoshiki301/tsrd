@@ -36,6 +36,10 @@ sample_mixture_exp <- function (
   return (t)
 }
 
+#' Sampling times from the survival function
+#'
+#' This function is to sample from survival function in specified parameters.
+#' The sampling method is inverse transform sampling.
 #' @export
 sample_tsrd_dataset <- function (
   n,

@@ -116,6 +116,10 @@ calc_loglikelihood_stage2 <- function (
   return (loglikelihood)
 }
 
+#' Parameter estimation using EM algorithm
+#'
+#' This function is to estimate parameters using EM algorithm.
+#' One dataset from generate_scenario is used in estimation.
 #' @export
 estimateEM <- function (
   dataset,
