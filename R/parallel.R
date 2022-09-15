@@ -25,7 +25,7 @@ estimate_parallely <- function (
   option = NULL
 ) {
   # prepare for parallel computing
-  exported_args <- formalArgs(estimateEM)[2:16]
+  exported_args <- methods::formalArgs(estimateEM)[2:16]
   env <- environment()
   max_cores <- parallel::detectCores()
   if (max_cores < num_cores) {

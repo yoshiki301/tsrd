@@ -3,7 +3,7 @@ rexp_range <- function (
   lambda,
   range = c(0, 1)
 ) {
-  u <- runif(n, min = range[1], max = range[2])
+  u <- stats::runif(n, min = range[1], max = range[2])
   t <- -log(u)/lambda
   return (t)
 }
@@ -20,7 +20,7 @@ sample_mixture_exp <- function (
     stop("lambda2 should be greater than lambda1.")
   }
 
-  u <- runif(n)
+  u <- stats::runif(n)
   is_less <- ifelse(u < theta, 1L, 0L)
   n1 <- sum(is_less)
   n2 <- n - n1
@@ -53,7 +53,7 @@ sample_tsrd_dataset <- function (
   S_r_judge <- exp(-lambda_I_r * t_judge)
   S_nr_judge <- exp(-lambda_I_nr * t_judge)
   S_judge <- theta * S_r_judge + (1 - theta) * S_nr_judge
-  S <- runif(n)
+  S <- stats::runif(n)
   is_induction <- ifelse(S >= S_judge, 1L, 0L)
   n_I <- sum(is_induction)
   n_IM <- n - n_I

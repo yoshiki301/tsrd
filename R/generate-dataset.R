@@ -54,7 +54,7 @@ generate_scenario <- function (
     data_IcMc <- data.frame(
       id = sim_id,
       time = t_IcMc,
-      cens = rbinom(IcMc_size, 1L, 1.0 - censor_rate),
+      cens = stats::rbinom(IcMc_size, 1L, 1.0 - censor_rate),
       t_judge = t_judge,
       is_induction = ifelse(t_IcMc <= t_judge, 1L, 0L),
       induction = "Ic",
@@ -68,7 +68,7 @@ generate_scenario <- function (
     data_ItMc <- data.frame(
       id = sim_id,
       time = t_ItMc,
-      cens = rbinom(ItMc_size, 1L, 1.0 - censor_rate),
+      cens = stats::rbinom(ItMc_size, 1L, 1.0 - censor_rate),
       t_judge = t_judge,
       is_induction = ifelse(t_ItMc <= t_judge, 1L, 0L),
       induction = "It",
@@ -82,7 +82,7 @@ generate_scenario <- function (
     data_IcMt <- data.frame(
       id = sim_id,
       time = t_IcMt,
-      cens = rbinom(IcMt_size, 1L, 1.0 - censor_rate),
+      cens = stats::rbinom(IcMt_size, 1L, 1.0 - censor_rate),
       t_judge = t_judge,
       is_induction = ifelse(t_IcMt <= t_judge, 1L, 0L),
       induction = "Ic",
@@ -96,7 +96,7 @@ generate_scenario <- function (
     data_ItMt <- data.frame(
       id = sim_id,
       time = t_ItMt,
-      cens = rbinom(ItMt_size, 1L, 1.0 - censor_rate),
+      cens = stats::rbinom(ItMt_size, 1L, 1.0 - censor_rate),
       t_judge = t_judge,
       is_induction = ifelse(t_ItMt <= t_judge, 1L, 0L),
       induction = "It",

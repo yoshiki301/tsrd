@@ -10,23 +10,23 @@ calc_responsibility <- function (
   t_judge <- X_IM$t_judge
   is_I <- X_IM$is_induction
 
-  S_r_judge <- 1 - pexp(t_judge, 0)
-  S_nr_judge <- 1 - pexp(t_judge, lambda_I_nr)
+  S_r_judge <- 1 - stats::pexp(t_judge, 0)
+  S_nr_judge <- 1 - stats::pexp(t_judge, lambda_I_nr)
   f_r <- (
     is_I * 0.0 +
-    (1 - is_I) * S_r_judge * dexp(time - t_judge, lambda_IM_r)
+    (1 - is_I) * S_r_judge * stats::dexp(time - t_judge, lambda_IM_r)
   )
   f_nr <- (
-    is_I * dexp(time, lambda_I_nr) +
-    (1 - is_I) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
+    is_I * stats::dexp(time, lambda_I_nr) +
+    (1 - is_I) * S_nr_judge * stats::dexp(time - t_judge, lambda_IM_nr)
   )
   S_r <- (
     is_I * 1.0 +
-    (1 - is_I) * S_r_judge * (1 - pexp(time - t_judge, lambda_IM_r))
+    (1 - is_I) * S_r_judge * (1 - stats::pexp(time - t_judge, lambda_IM_r))
   )
   S_nr <- (
-    is_I * (1 - pexp(time, lambda_I_nr)) +
-    (1 - is_I) * S_nr_judge * (1 - pexp(time - t_judge, lambda_IM_nr))
+    is_I * (1 - stats::pexp(time, lambda_I_nr)) +
+    (1 - is_I) * S_nr_judge * (1 - stats::pexp(time - t_judge, lambda_IM_nr))
   )
 
   observation <- theta * f_r / (
@@ -92,7 +92,7 @@ calc_loglikelihood_stage1 <- function (
   X_I <- rbind(X_IMc, X_IMt)
   time <- X_I$time
   is_I <- X_I$is_induction
-  loglikelihood <- sum(is_I) * log(1 - theta) + sum(is_I * dexp(time, lambda_I_nr))
+  loglikelihood <- sum(is_I) * log(1 - theta) + sum(is_I * stats::dexp(time, lambda_I_nr))
   return (loglikelihood)
 }
 
@@ -106,11 +106,11 @@ calc_loglikelihood_stage2 <- function (
   time <- X_IM$time
   t_judge <- X_IM$t_judge
   is_I <- X_IM$is_induction
-  S_r_judge <- 1 - pexp(t_judge, 0)
-  S_nr_judge <- 1 - pexp(t_judge, lambda_I_nr)
+  S_r_judge <- 1 - stats::pexp(t_judge, 0)
+  S_nr_judge <- 1 - stats::pexp(t_judge, lambda_I_nr)
   loglikelihood <- sum((1 - is_I) * log(
-    theta * S_r_judge * dexp(time - t_judge, lambda_IM_r) +
-    (1 - theta) * S_nr_judge * dexp(time - t_judge, lambda_IM_nr)
+    theta * S_r_judge * stats::dexp(time - t_judge, lambda_IM_r) +
+    (1 - theta) * S_nr_judge * stats::dexp(time - t_judge, lambda_IM_nr)
   ))
   loglikelihood[is.nan(loglikelihood)] <- 0.0 # fill induction's log-likelihoods
   return (loglikelihood)
