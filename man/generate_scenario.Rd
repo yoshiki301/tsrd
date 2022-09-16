@@ -29,6 +29,51 @@ generate_scenario(
   seed = 42
 )
 }
+\arguments{
+\item{sim_num}{The number of simulations.}
+
+\item{t_judge}{The time to judge whether to be responder or not.}
+
+\item{censor_rate}{The proportion of censoring.}
+
+\item{IcMc_size}{The sample size of induction control and maintenance control.}
+
+\item{ItMc_size}{The sample size of induction treatment and maintenance control.}
+
+\item{IcMt_size}{The sample size of induction control and maintenance treatment.}
+
+\item{ItMt_size}{The sample size of induction treatment and maintenance treatment.}
+
+\item{theta_Ic}{The proportion of responders in induction control.}
+
+\item{theta_It}{The proportion of responders in induction treatment.}
+
+\item{lambda_Ic_r}{The hazard of responders in induction control. This should be set to 0.}
+
+\item{lambda_Ic_nr}{The hazard of non-responders in induction control.}
+
+\item{lambda_It_r}{The hazard of responders in induction treatment. This should be set to 0.}
+
+\item{lambda_It_nr}{The hazard of non-responders in induction treatment.}
+
+\item{lambda_IcMc_r}{The hazard of responders in maintenance control when induction control.}
+
+\item{lambda_IcMc_nr}{The hazard of non-responders in maintenance control when induction control.}
+
+\item{lambda_ItMc_r}{The hazard of responders in maintenance treatment when induction control.}
+
+\item{lambda_ItMc_nr}{The hazard of non-responders in maintenance treatment when induction control.}
+
+\item{lambda_IcMt_r}{The hazard of responders in maintenance control when induction treatment.}
+
+\item{lambda_IcMt_nr}{The hazard of non-responders in maintenance control when induction treatment.}
+
+\item{lambda_ItMt_r}{The hazard of responders in maintenance treatment when induction treatment.}
+
+\item{lambda_ItMt_nr}{The hazard of non-responders in maintenance treatment when induction treatment.}
+
+\item{seed}{The value of random seed.}
+}
 \description{
 This function is to generate datasets with true parameters in each treatment group.
 Each dataset consists of survival time, censoring status, and treatment assignment.

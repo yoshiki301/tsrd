@@ -14,6 +14,21 @@ sample_tsrd_dataset(
   lambda_IM_nr
 )
 }
+\arguments{
+\item{n}{The number of sample.}
+
+\item{t_judge}{The time to judge whether to be responder or not.}
+
+\item{theta}{The proportion of responders.}
+
+\item{lambda_I_r}{The hazard of responders in induction.}
+
+\item{lambda_I_nr}{The hazard of non-responders in induction.}
+
+\item{lambda_IM_r}{The hazard of responders in maintenance.}
+
+\item{lambda_IM_nr}{The hazard of non-responders in maintenance.}
+}
 \description{
 This function is to sample from survival function in specified parameters.
 The sampling method is inverse transform sampling.

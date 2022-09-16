@@ -2,6 +2,51 @@
 #'
 #' This function is to generate datasets with true parameters in each treatment group.
 #' Each dataset consists of survival time, censoring status, and treatment assignment.
+#'
+#' @param sim_num The number of simulations.
+#'
+#' @param t_judge The time to judge whether to be responder or not.
+#'
+#' @param censor_rate The proportion of censoring.
+#'
+#' @param IcMc_size The sample size of induction control and maintenance control.
+#'
+#' @param ItMc_size The sample size of induction treatment and maintenance control.
+#'
+#' @param IcMt_size The sample size of induction control and maintenance treatment.
+#'
+#' @param ItMt_size The sample size of induction treatment and maintenance treatment.
+#'
+#' @param theta_Ic The proportion of responders in induction control.
+#'
+#' @param theta_It The proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_r The hazard of responders in induction control. This should be set to 0.
+#'
+#' @param lambda_Ic_nr The hazard of non-responders in induction control.
+#'
+#' @param lambda_It_r The hazard of responders in induction treatment. This should be set to 0.
+#'
+#' @param lambda_It_nr The hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r The hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr The hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r The hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr The hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r The hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr The hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r The hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr The hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param seed The value of random seed.
+#'
 #' @export
 generate_scenario <- function (
   sim_num = 1000L,

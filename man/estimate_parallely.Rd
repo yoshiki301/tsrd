@@ -25,6 +25,44 @@ estimate_parallely(
   option = NULL
 )
 }
+\arguments{
+\item{dataset}{The datasets of scenarios from function generate_scenario.}
+
+\item{num_cores}{The number of assigned cores.}
+
+\item{verbose}{If TRUE, show progress.}
+
+\item{theta_Ic_init}{Initial value vectors of proportion of responders in induction control.}
+
+\item{theta_It_init}{Initial value vectors of proportion of responders in induction treatment.}
+
+\item{lambda_Ic_nr_init}{Initial value vectors of hazard of non-responders in induction control.}
+
+\item{lambda_It_nr_init}{Initial value vectors of hazard of non-responders in induction treatment.}
+
+\item{lambda_IcMc_r_init}{Initial value vectors of hazard of responders in maintenance control when induction control.}
+
+\item{lambda_IcMc_nr_init}{Initial value vectors of hazard of non-responders in maintenance control when induction control.}
+
+\item{lambda_ItMc_r_init}{Initial value vectors of hazard of responders in maintenance treatment when induction control.}
+
+\item{lambda_ItMc_nr_init}{Initial value vectors of hazard of non-responders in maintenance treatment when induction control.}
+
+\item{lambda_IcMt_r_init}{Initial value vectors of hazard of responders in maintenance control when induction treatment.}
+
+\item{lambda_IcMt_nr_init}{Initial value vectors of hazard of non-responders in maintenance control when induction treatment.}
+
+\item{lambda_ItMt_r_init}{Initial value vectors of hazard of responders in maintenance treatment when induction treatment.}
+
+\item{lambda_ItMt_nr_init}{Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.}
+
+\item{max_iter}{The maximum number of iteration in each EM algorithm.}
+
+\item{eps}{The threshold of difference log-likelihoods to stop EM algorithm.}
+
+\item{option}{If NULL, implement default EM algorithm.
+If "fix_theta", implement EM algorithm being theta fixed.}
+}
 \description{
 This function is to estimate parameters by parallel computing.
 Full dataset from generate_scenario is used in estimation.

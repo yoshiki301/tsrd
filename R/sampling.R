@@ -40,6 +40,21 @@ sample_mixture_exp <- function (
 #'
 #' This function is to sample from survival function in specified parameters.
 #' The sampling method is inverse transform sampling.
+#'
+#' @param n The number of sample.
+#'
+#' @param t_judge The time to judge whether to be responder or not.
+#'
+#' @param theta The proportion of responders.
+#'
+#' @param lambda_I_r The hazard of responders in induction.
+#'
+#' @param lambda_I_nr The hazard of non-responders in induction.
+#'
+#' @param lambda_IM_r The hazard of responders in maintenance.
+#'
+#' @param lambda_IM_nr The hazard of non-responders in maintenance.
+#'
 #' @export
 sample_tsrd_dataset <- function (
   n,

@@ -3,6 +3,44 @@
 #' This function is to estimate parameters by parallel computing.
 #' Full dataset from generate_scenario is used in estimation.
 #' Parallel computing is implemented by parallel package functions.
+#'
+#' @param dataset The datasets of scenarios from function generate_scenario.
+#'
+#' @param num_cores The number of assigned cores.
+#'
+#' @param verbose If TRUE, show progress.
+#'
+#' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
+#'
+#' @param theta_It_init Initial value vectors of proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_nr_init Initial value vectors of hazard of non-responders in induction control.
+#'
+#' @param lambda_It_nr_init Initial value vectors of hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r_init Initial value vectors of hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r_init Initial value vectors of hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r_init Initial value vectors of hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r_init Initial value vectors of hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param max_iter The maximum number of iteration in each EM algorithm.
+#'
+#' @param eps The threshold of difference log-likelihoods to stop EM algorithm.
+#'
+#' @param option If NULL, implement default EM algorithm.
+#' If "fix_theta", implement EM algorithm being theta fixed.
+#'
 #' @export
 estimate_parallely <- function (
   dataset,
