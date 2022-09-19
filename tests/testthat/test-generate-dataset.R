@@ -20,3 +20,12 @@ test_that("generate_scenario works", {
   )
   expect_equal(actual_count, expected_count)
 })
+
+test_that("adjust_censored_time works", {
+  time <- runif(100L, min = 0.0, max = 1.0)
+  cens <- c(rep(1, 90L), rep(0, 10L))
+
+  adjusted_time <- adjust_censored_time(time, cens)
+  expect_equal(all(adjusted_time[1:90] == time[1:90]), T)
+  expect_equal(all(adjusted_time[91:100] <= time[91:100]), T)
+})

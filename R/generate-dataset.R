@@ -1,3 +1,16 @@
+adjust_censored_time <- function (
+  time,
+  cens
+) {
+  if (length(time) != length(cens)) {
+    stop("The lengths of time and cens should be equal.")
+  }
+
+  censored_time <- time[cens == 0]
+  time[cens == 0] <- runif(length(censored_time), 0.0, censored_time)
+  return (time)
+}
+
 #' Generate datasets in one scenario
 #'
 #' This function is to generate datasets with true parameters in each treatment group.
@@ -75,6 +88,8 @@ generate_scenario <- function (
   set.seed(seed)
 
   generate_func <- function (sim_id) {
+    # sample random variable of time
+    # This is ideal time, observation is censored or not
     t_IcMc <- sample_tsrd_dataset(
       IcMc_size, t_judge, theta_Ic,
       lambda_Ic_r, lambda_Ic_nr,
@@ -96,12 +111,25 @@ generate_scenario <- function (
       lambda_ItMt_r, lambda_ItMt_nr
     )
 
+    # set status of censored or not
+    cens_IcMc <- stats::rbinom(IcMc_size, 1L, 1.0 - censor_rate)
+    cens_ItMc <- stats::rbinom(ItMc_size, 1L, 1.0 - censor_rate)
+    cens_IcMt <- stats::rbinom(IcMt_size, 1L, 1.0 - censor_rate)
+    cens_ItMt <- stats::rbinom(ItMt_size, 1L, 1.0 - censor_rate)
+
+    # calculate observed time (event or censoring)
+    obs_IcMc <- adjust_censored_time(t_IcMc, cens_IcMc)
+    obs_ItMc <- adjust_censored_time(t_ItMc, cens_ItMc)
+    obs_IcMt <- adjust_censored_time(t_IcMt, cens_IcMt)
+    obs_ItMt <- adjust_censored_time(t_ItMt, cens_ItMt)
+
+    # make a scenario data as data.frame
     data_IcMc <- data.frame(
       id = sim_id,
-      time = t_IcMc,
-      cens = stats::rbinom(IcMc_size, 1L, 1.0 - censor_rate),
+      time = obs_IcMc,
+      cens = cens_IcMc,
       t_judge = t_judge,
-      is_induction = ifelse(t_IcMc <= t_judge, 1L, 0L),
+      is_induction = ifelse(obs_IcMc <= t_judge, 1L, 0L),
       induction = "Ic",
       maintenance = "Mc",
       theta = theta_Ic,
@@ -112,10 +140,10 @@ generate_scenario <- function (
     )
     data_ItMc <- data.frame(
       id = sim_id,
-      time = t_ItMc,
-      cens = stats::rbinom(ItMc_size, 1L, 1.0 - censor_rate),
+      time = obs_ItMc,
+      cens = cens_ItMc,
       t_judge = t_judge,
-      is_induction = ifelse(t_ItMc <= t_judge, 1L, 0L),
+      is_induction = ifelse(obs_ItMc <= t_judge, 1L, 0L),
       induction = "It",
       maintenance = "Mc",
       theta = theta_It,
@@ -126,10 +154,10 @@ generate_scenario <- function (
     )
     data_IcMt <- data.frame(
       id = sim_id,
-      time = t_IcMt,
-      cens = stats::rbinom(IcMt_size, 1L, 1.0 - censor_rate),
+      time = obs_IcMt,
+      cens = cens_IcMt,
       t_judge = t_judge,
-      is_induction = ifelse(t_IcMt <= t_judge, 1L, 0L),
+      is_induction = ifelse(obs_IcMt <= t_judge, 1L, 0L),
       induction = "Ic",
       maintenance = "Mt",
       theta = theta_Ic,
@@ -140,10 +168,10 @@ generate_scenario <- function (
     )
     data_ItMt <- data.frame(
       id = sim_id,
-      time = t_ItMt,
-      cens = stats::rbinom(ItMt_size, 1L, 1.0 - censor_rate),
+      time = obs_ItMt,
+      cens = cens_ItMt,
       t_judge = t_judge,
-      is_induction = ifelse(t_ItMt <= t_judge, 1L, 0L),
+      is_induction = ifelse(obs_ItMt <= t_judge, 1L, 0L),
       induction = "It",
       maintenance = "Mt",
       theta = theta_It,
