@@ -51,8 +51,8 @@ calc_maintenance_hr <- function (
   dataset
 ) {
   # calculate each point estimate of hazard ratio
-  hr_Ic <- estimators$lambda_r_IcMt / estimators$lambda_r_IcMc
-  hr_It <- estimators$lambda_r_ItMt / estimators$lambda_r_ItMc
+  hr_Ic <- estimators$lambda_IcMt_r / estimators$lambda_IcMc_r
+  hr_It <- estimators$lambda_ItMt_r / estimators$lambda_ItMc_r
 
   # TODO: calculate CI of each point estimate of hazard ratio
   hr_Ic_lower_ci <- 0.0

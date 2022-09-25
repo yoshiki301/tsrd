@@ -3,10 +3,10 @@ estimators <- data.frame(
   theta_It = c(0.3, 0.4, 0.5),
   lambda_Ic_nr = c(0.01, 0.02, 0.03),
   lambda_It_nr = c(0.02, 0.03, 0.04),
-  lambda_r_IcMt = c(0.01, 0.02, 0.03),
-  lambda_r_IcMc = c(0.02, 0.04, 0.06),
-  lambda_r_ItMt = c(0.02, 0.03, 0.04),
-  lambda_r_ItMc = c(0.04, 0.06, 0.08)
+  lambda_IcMt_r = c(0.01, 0.02, 0.03),
+  lambda_IcMc_r = c(0.02, 0.04, 0.06),
+  lambda_ItMt_r = c(0.02, 0.03, 0.04),
+  lambda_ItMc_r = c(0.04, 0.06, 0.08)
 )
 dataset <- data.frame(
   induction = c("Ic", "It", "Ic", "It"),
