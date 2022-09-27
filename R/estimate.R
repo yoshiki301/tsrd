@@ -116,6 +116,96 @@ calc_loglikelihood_stage2 <- function (
   return (loglikelihood)
 }
 
+calc_Fisher_information <- function (
+  dataset,
+  parameters
+) {
+  # fixed data
+  X_IcMc <- subset(
+    dataset, induction == "Ic" & maintenance == "Mc",
+    select = c(cens, is_induction)
+  )
+  X_ItMc <- subset(
+    dataset, induction == "It" & maintenance == "Mc",
+    select = c(cens, is_induction)
+  )
+  X_IcMt <- subset(
+    dataset, induction == "Ic" & maintenance == "Mt",
+    select = c(cens, is_induction)
+  )
+  X_ItMt <- subset(
+    dataset, induction == "It" & maintenance == "Mt",
+    select = c(cens, is_induction)
+  )
+
+  X_Ic <- rbind(X_IcMc, X_IcMt)
+  X_It <- rbind(X_ItMc, X_ItMt)
+  pi_Ic <- c(parameters$pi_IcMc, parameters$pi_IcMt)
+  pi_It <- c(parameters$pi_ItMc, parameters$pi_ItMt)
+
+  # calculate the Fisher information of theta
+  theta_Ic_info <- sum(
+    (pi_Ic / parameters$theta_Ic^2) +
+    ((1 - pi_Ic) / (1 - parameters$theta_Ic)^2)
+  )
+  theta_It_info <- sum(
+    (pi_It / parameters$theta_It^2) +
+    ((1 - pi_It) / (1 - parameters$theta_It)^2)
+  )
+
+  # calculate the Fisher information of hazard of non-responders in induction
+  lambda_Ic_nr_info <- sum(
+    (1 - pi_Ic) * X_Ic$cens * X_Ic$is_induction / (parameters$lambda_Ic_nr^2)
+  )
+  lambda_It_nr_info <- sum(
+    (1 - pi_It) * X_It$cens * X_It$is_induction / (parameters$lambda_It_nr^2)
+  )
+
+  # calculate the Fisher information of hazard in maintenance
+  lambda_IcMc_r_info <- sum(
+    parameters$pi_IcMc * X_IcMc$cens * (1 - X_IcMc$is_induction) / (parameters$lambda_IcMc_r^2)
+  )
+  lambda_IcMc_nr_info <- sum(
+    (1 - parameters$pi_IcMc) * X_IcMc$cens * (1 - X_IcMc$is_induction) / (parameters$lambda_IcMc_nr^2)
+  )
+  lambda_ItMc_r_info <- sum(
+    parameters$pi_ItMc * X_ItMc$cens * (1 - X_ItMc$is_induction) / (parameters$lambda_ItMc_r^2)
+  )
+  lambda_ItMc_nr_info <- sum(
+    (1 - parameters$pi_ItMc) * X_ItMc$cens * (1 - X_ItMc$is_induction) / (parameters$lambda_ItMc_nr^2)
+  )
+  lambda_IcMt_r_info <- sum(
+    parameters$pi_IcMt * X_IcMt$cens * (1 - X_IcMt$is_induction) / (parameters$lambda_IcMt_r^2)
+  )
+  lambda_IcMt_nr_info <- sum(
+    (1 - parameters$pi_IcMt) * X_IcMt$cens * (1 - X_IcMt$is_induction) / (parameters$lambda_IcMt_nr^2)
+  )
+  lambda_ItMt_r_info <- sum(
+    parameters$pi_ItMt * X_ItMt$cens * (1 - X_ItMt$is_induction) / (parameters$lambda_ItMt_r^2)
+  )
+  lambda_ItMt_nr_info <- sum(
+    (1 - parameters$pi_ItMt) * X_ItMt$cens * (1 - X_ItMt$is_induction) / (parameters$lambda_ItMt_nr^2)
+  )
+
+  # TODO: calculate non-diagonal elements
+
+  result <- list(
+    theta_Ic_info = theta_Ic_info,
+    theta_It_info = theta_It_info,
+    lambda_Ic_nr_info = lambda_Ic_nr_info,
+    lambda_It_nr_info = lambda_It_nr_info,
+    lambda_IcMc_r_info = lambda_IcMc_r_info,
+    lambda_IcMc_nr_info = lambda_IcMc_nr_info,
+    lambda_ItMc_r_info = lambda_ItMc_r_info,
+    lambda_ItMc_nr_info = lambda_ItMc_nr_info,
+    lambda_IcMt_r_info = lambda_IcMt_r_info,
+    lambda_IcMt_nr_info = lambda_IcMt_nr_info,
+    lambda_ItMt_r_info = lambda_ItMt_r_info,
+    lambda_ItMt_nr_info = lambda_ItMt_nr_info
+  )
+  return (result)
+}
+
 #' Parameter estimation using EM algorithm
 #'
 #' This function is to estimate parameters using EM algorithm.
@@ -401,12 +491,14 @@ estimateEM <- function (
 
   loglikelihoods <- loglikelihoods[!is.null(loglikelihoods)]
   step <- length(loglikelihoods) - 1
+  fisher_information <- calc_Fisher_information(dataset, parameters)
 
   return (c(
     list(
       step = step,
       loglikelihood = loglikelihoods
     ),
-    parameters
+    parameters,
+    fisher_information
   ))
 }
