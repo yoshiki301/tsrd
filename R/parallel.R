@@ -92,6 +92,8 @@ estimate_parallely <- function (
     if (verbose) {
       # TODO: view progress
     }
+
+    # TODO: enable to select bootstrap
     e <- estimateEM(
       dataset,
       theta_Ic_init = theta_Ic_init,
