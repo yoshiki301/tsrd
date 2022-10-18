@@ -1,5 +1,11 @@
 # prepare dataset
-X <- generate_scenario(sim_num = 1L)
+X <- generate_scenario(
+  sim_num = 1L,
+  IcMc_size = 100L,
+  ItMc_size = 200L,
+  IcMt_size = 300L,
+  ItMt_size = 400L
+)
 X_IcMc <- subset(
   X, induction == "Ic" & maintenance == "Mc",
   select = c(time, cens, t_judge, is_induction)
@@ -47,11 +53,11 @@ theta_It <- update_theta(
   X_IMc = X_ItMc, X_IMt = X_ItMt,
   pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
 )
-lambda_Ic_nr <<- update_lambda_I(
+lambda_Ic_nr <- update_lambda_I(
   X_IMc = X_IcMc, X_IMt = X_IcMt,
   pi_IMc = pi_IcMc, pi_IMt = pi_IcMt
 )
-lambda_It_nr <<- update_lambda_I(
+lambda_It_nr <- update_lambda_I(
   X_IMc = X_ItMc, X_IMt = X_ItMt,
   pi_IMc = pi_ItMc, pi_IMt = pi_ItMt
 )
@@ -145,6 +151,7 @@ test_that("calc_Fisher_information works", {
     dataset = X, parameters = parameters
   )
   expect_type(fisher_information, "list")
+  expect_equal(sum(is.na(fisher_information)), 0L)
   expect_equal(all(fisher_information > 0), T) # diagonal elements must have positivity
   # TODO: check non-diagonal elements
 })
@@ -153,6 +160,25 @@ test_that("estimateEM works", {
   estimator <- estimateEM(dataset = X, max_iter = 100L)
   expect_type(estimator, "list")
   expect_equal(all(diff(estimator$loglikelihood) >= 0.0), T) # monotonous
+  expected_names <- c(
+    "step", "loglikelihood",
+    "pi_IcMc", "pi_IcMt", "pi_ItMc", "pi_ItMt",
+    "theta_Ic", "theta_It",
+    "lambda_Ic_r", "lambda_Ic_nr",
+    "lambda_It_r", "lambda_It_nr",
+    "lambda_IcMc_r", "lambda_IcMc_nr",
+    "lambda_ItMc_r", "lambda_ItMc_nr",
+    "lambda_IcMt_r", "lambda_IcMt_nr",
+    "lambda_ItMt_r", "lambda_ItMt_nr",
+    "theta_Ic_info", "theta_It_info",
+    "lambda_Ic_nr_info",
+    "lambda_It_nr_info",
+    "lambda_IcMc_r_info", "lambda_IcMc_nr_info",
+    "lambda_ItMc_r_info", "lambda_ItMc_nr_info",
+    "lambda_IcMt_r_info", "lambda_IcMt_nr_info",
+    "lambda_ItMt_r_info", "lambda_ItMt_nr_info"
+  )
+  expect_equal(names(estimator), expected_names)
 })
 
 test_that("estimateEM for censored data works", {
@@ -175,3 +201,5 @@ test_that("error in estimateEM", {
     "option parameter is invalid."
   )
 })
+
+# TODO: add test for estimate_sequentially()
