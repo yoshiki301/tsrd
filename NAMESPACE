@@ -2,5 +2,6 @@
 
 export(estimateEM)
 export(estimate_parallely)
+export(estimate_sequentially)
 export(generate_scenario)
 export(sample_tsrd_dataset)
