@@ -80,7 +80,10 @@ estimate_parallely <- function (
   parallel::clusterExport(cl, "update_lambda_IM", envir = env)
   parallel::clusterExport(cl, "calc_loglikelihood_stage1", envir = env)
   parallel::clusterExport(cl, "calc_loglikelihood_stage2", envir = env)
+  parallel::clusterExport(cl, "calc_Fisher_information", envir = env)
   parallel::clusterExport(cl, "verbose", envir = env)
+
+  parallel::clusterEvalQ(cl, library(testthat)) # for test
 
   # define function to parallely implement
   target_ids <- unique(dataset$id)
@@ -113,6 +116,7 @@ estimate_parallely <- function (
       option = option
     )
     estimator <- data.frame(
+      # point estimates
       theta_Ic = e$theta_Ic,
       theta_It = e$theta_It,
       lambda_Ic_r = 0.0,
@@ -126,7 +130,20 @@ estimate_parallely <- function (
       lambda_IcMt_r = e$lambda_IcMt_r,
       lambda_IcMt_nr = e$lambda_IcMt_nr,
       lambda_ItMt_r = e$lambda_ItMt_r,
-      lambda_ItMt_nr = e$lambda_ItMt_nr
+      lambda_ItMt_nr = e$lambda_ItMt_nr,
+      # Fisher information
+      theta_Ic_info = e$theta_Ic_info,
+      theta_It_info = e$theta_It_info,
+      lambda_Ic_nr_info = e$lambda_Ic_nr_info,
+      lambda_It_nr_info = e$lambda_It_nr_info,
+      lambda_IcMc_r_info = e$lambda_IcMc_r_info,
+      lambda_IcMc_nr_info = e$lambda_IcMc_nr_info,
+      lambda_ItMc_r_info = e$lambda_ItMc_r_info,
+      lambda_ItMc_nr_info = e$lambda_ItMc_nr_info,
+      lambda_IcMt_r_info = e$lambda_IcMt_r_info,
+      lambda_IcMt_nr_info = e$lambda_IcMt_nr_info,
+      lambda_ItMt_r_info = e$lambda_ItMt_r_info,
+      lambda_ItMt_nr_info = e$lambda_ItMt_nr_info
     )
     return (estimator)
   }
