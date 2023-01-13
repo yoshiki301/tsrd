@@ -206,6 +206,97 @@ calc_Fisher_information <- function (
   return (result)
 }
 
+calc_parameter_ci <- function (
+  dataset,
+  paramters,
+  alpha = 0.05,
+  full_denom = TRUE
+) {
+  fisher_info <- calc_Fisher_information(dataset, parameters)
+
+  # CI by normal approximation
+  z <- qnorm(alpha / 2, mean = 0, sd = 1, lower.tail = FALSE)
+  n <- nrow(dataset)
+  if (full_denom) {
+    n_Ic <- n
+    n_It <- n
+    n_IcMc <- n
+    n_IcMt <- n
+    n_ItMc <- n
+    n_ItMt <- n
+  } else {
+    n_Ic <- nrow(subset(dataset, induction == "Ic"))
+    n_It <- nrow(subset(dataset, induction == "It"))
+    n_IcMc <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mc"))
+    n_IcMt <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mt"))
+    n_ItMc <- nrow(subset(dataset, induction == "It" & maintenance == "Mc"))
+    n_ItMt <- nrow(subset(dataset, induction == "It" & maintenance == "Mt"))
+  }
+  theta_Ic_ci <- c(
+    paramters$theta_Ic - (z / sqrt(fisher_info$theta_Ic_info * n_Ic)),
+    paramters$theta_Ic + (z / sqrt(fisher_info$theta_Ic_info * n_Ic))
+  )
+  theta_It_ci <- c(
+    paramters$theta_It - (z / sqrt(fisher_info$theta_It_info * n_It)),
+    paramters$theta_It + (z / sqrt(fisher_info$theta_It_info * n_It))
+  )
+  lambda_Ic_nr_ci <- c(
+    paramters$lambda_Ic_nr - (z / sqrt(fisher_info$lambda_Ic_nr_info * n_Ic)),
+    paramters$lambda_Ic_nr + (z / sqrt(fisher_info$lambda_Ic_nr_info * n_Ic))
+  )
+  lambda_It_nr_ci <- c(
+    paramters$lambda_It_nr - (z / sqrt(fisher_info$lambda_It_nr_info * n_It)),
+    paramters$lambda_It_nr + (z / sqrt(fisher_info$lambda_It_nr_info * n_It))
+  )
+  lambda_IcMc_r_ci <- c(
+    paramters$lambda_IcMc_r - (z / sqrt(fisher_info$lambda_IcMc_r_info * n_IcMc)),
+    paramters$lambda_IcMc_r + (z / sqrt(fisher_info$lambda_IcMc_r_info * n_IcMc))
+  )
+  lambda_IcMc_nr_ci <- c(
+    paramters$lambda_IcMc_nr - (z / sqrt(fisher_info$lambda_IcMc_nr_info * n_IcMc)),
+    paramters$lambda_IcMc_nr + (z / sqrt(fisher_info$lambda_IcMc_nr_info * n_IcMc))
+  )
+  lambda_IcMt_r_ci <- c(
+    paramters$lambda_IcMt_r - (z / sqrt(fisher_info$lambda_IcMt_r_info * n_IcMt)),
+    paramters$lambda_IcMt_r + (z / sqrt(fisher_info$lambda_IcMt_r_info * n_IcMt))
+  )
+  lambda_IcMt_nr_ci <- c(
+    paramters$lambda_IcMt_nr - (z / sqrt(fisher_info$lambda_IcMt_nr_info * n_IcMt)),
+    paramters$lambda_IcMt_nr + (z / sqrt(fisher_info$lambda_IcMt_nr_info * n_IcMt))
+  )
+  lambda_ItMc_r_ci <- c(
+    paramters$lambda_ItMc_r - (z / sqrt(fisher_info$lambda_ItMc_r_info * n_ItMc)),
+    paramters$lambda_ItMc_r + (z / sqrt(fisher_info$lambda_ItMc_r_info * n_ItMc))
+  )
+  lambda_ItMc_nr_ci <- c(
+    paramters$lambda_ItMc_nr - (z / sqrt(fisher_info$lambda_ItMc_nr_info * n_ItMc)),
+    paramters$lambda_ItMc_nr + (z / sqrt(fisher_info$lambda_ItMc_nr_info * n_ItMc))
+  )
+  lambda_ItMt_r_ci <- c(
+    paramters$lambda_ItMt_r - (z / sqrt(fisher_info$lambda_ItMt_r_info * n_ItMt)),
+    paramters$lambda_ItMt_r + (z / sqrt(fisher_info$lambda_ItMt_r_info * n_ItMt))
+  )
+  lambda_ItMt_nr_ci <- c(
+    paramters$lambda_ItMt_nr - (z / sqrt(fisher_info$lambda_ItMt_nr_info * n_ItMt)),
+    paramters$lambda_ItMt_nr + (z / sqrt(fisher_info$lambda_ItMt_nr_info * n_ItMt))
+  )
+  result <- list(
+    theta_Ic_ci = theta_Ic_ci,
+    theta_It_ci = theta_It_ci,
+    lambda_Ic_nr_ci = lambda_Ic_nr_ci,
+    lambda_It_nr_ci = lambda_It_nr_ci,
+    lambda_IcMc_r_ci = lambda_IcMc_r_ci,
+    lambda_IcMc_nr_ci = lambda_IcMc_nr_ci,
+    lambda_IcMt_r_ci = lambda_IcMt_r_ci,
+    lambda_IcMt_nr_ci = lambda_IcMt_nr_ci,
+    lambda_ItMc_r_ci = lambda_ItMc_r_ci,
+    lambda_ItMc_nr_ci = lambda_ItMc_nr_ci,
+    lambda_ItMt_r_ci = lambda_ItMt_r_ci,
+    lambda_ItMt_nr_ci = lambda_ItMt_nr_ci
+  )
+  return (result)
+}
+
 #' Parameter estimation using EM algorithm
 #'
 #' This function is to estimate parameters using EM algorithm.
