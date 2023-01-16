@@ -85,8 +85,8 @@ estimateEM_bootstrap_ci <- function (
   # two-sided bootstrap CI
   lower_percentile <- alpha / 2
   upper_percentile <- 1 - (alpha / 2)
-  lower_quantile <- sapply(boot_estimators, function (x) quantile(x, lower_percentile))
-  upper_quantile <- sapply(boot_estimators, function (x) quantile(x, upper_percentile))
+  lower_quantile <- sapply(boot_estimators, function (x) stats::quantile(x, lower_percentile))
+  upper_quantile <- sapply(boot_estimators, function (x) stats::quantile(x, upper_percentile))
 
   percentile <- c(lower_percentile, upper_percentile)
   result <- cbind(rbind(lower_quantile, upper_quantile), percentile)

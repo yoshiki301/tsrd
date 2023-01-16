@@ -65,10 +65,10 @@ calc_induction_rmst <- function (
   )
 
   # calculate CI based on asymptotic normality
-  rmst_Ic_lower_ci <- rmst_Ic + qnorm(alpha / 2) * sqrt(rmst_Ic_var / n_Ic)
-  rmst_Ic_upper_ci <- rmst_Ic + qnorm(1 - (alpha / 2)) * sqrt(rmst_Ic_var / n_Ic)
-  rmst_It_lower_ci <- rmst_It + qnorm(alpha / 2) * sqrt(rmst_It_var / n_It)
-  rmst_It_upper_ci <- rmst_It + qnorm(1 - (alpha / 2)) * sqrt(rmst_It_var / n_It)
+  rmst_Ic_lower_ci <- rmst_Ic + stats::qnorm(alpha / 2) * sqrt(rmst_Ic_var / n_Ic)
+  rmst_Ic_upper_ci <- rmst_Ic + stats::qnorm(1 - (alpha / 2)) * sqrt(rmst_Ic_var / n_Ic)
+  rmst_It_lower_ci <- rmst_It + stats::qnorm(alpha / 2) * sqrt(rmst_It_var / n_It)
+  rmst_It_upper_ci <- rmst_It + stats::qnorm(1 - (alpha / 2)) * sqrt(rmst_It_var / n_It)
 
   # calculate true RMST
   theta_Ic_true <- subset(dataset, induction == "Ic", select = theta)[1, 1]
@@ -149,10 +149,10 @@ calc_maintenance_hr <- function (
   )
 
   # calculate CI based on asymptotic normality
-  hr_Ic_lower_ci <- hr_Ic + qnorm(alpha / 2) * sqrt(hr_Ic_var / n_Ic)
-  hr_Ic_upper_ci <- hr_Ic + qnorm(1 - (alpha / 2)) * sqrt(hr_Ic_var / n_Ic)
-  hr_It_lower_ci <- hr_It + qnorm(alpha / 2) * sqrt(hr_It_var / n_It)
-  hr_It_upper_ci <- hr_It + qnorm(1 - (alpha / 2)) * sqrt(hr_It_var / n_It)
+  hr_Ic_lower_ci <- hr_Ic + stats::qnorm(alpha / 2) * sqrt(hr_Ic_var / n_Ic)
+  hr_Ic_upper_ci <- hr_Ic + stats::qnorm(1 - (alpha / 2)) * sqrt(hr_Ic_var / n_Ic)
+  hr_It_lower_ci <- hr_It + stats::qnorm(alpha / 2) * sqrt(hr_It_var / n_It)
+  hr_It_upper_ci <- hr_It + stats::qnorm(1 - (alpha / 2)) * sqrt(hr_It_var / n_It)
 
   # calculate true hazard ratio
   lambda_IcMc_r_true <- subset(dataset, induction == "Ic" & maintenance == "Mc", select = lambda_IM_r)[1, 1]
