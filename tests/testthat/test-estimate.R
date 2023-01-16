@@ -202,4 +202,50 @@ test_that("error in estimateEM", {
   )
 })
 
-# TODO: add test for estimate_sequentially()
+test_that("estimateEM_as_frame works", {
+  estimator <- estimateEM_as_frame(dataset = X, max_iter = 100L)
+  expect_type(estimator, "list")
+  expected_colnames <- c(
+    "theta_Ic", "theta_It",
+    "lambda_Ic_r", "lambda_Ic_nr",
+    "lambda_It_r", "lambda_It_nr",
+    "lambda_IcMc_r", "lambda_IcMc_nr",
+    "lambda_ItMc_r", "lambda_ItMc_nr",
+    "lambda_IcMt_r", "lambda_IcMt_nr",
+    "lambda_ItMt_r", "lambda_ItMt_nr",
+    "theta_Ic_info", "theta_It_info",
+    "lambda_Ic_nr_info",
+    "lambda_It_nr_info",
+    "lambda_IcMc_r_info", "lambda_IcMc_nr_info",
+    "lambda_ItMc_r_info", "lambda_ItMc_nr_info",
+    "lambda_IcMt_r_info", "lambda_IcMt_nr_info",
+    "lambda_ItMt_r_info", "lambda_ItMt_nr_info",
+    "n_IcMc", "n_ItMc", "n_IcMt", "n_ItMt",
+    "t_judge"
+  )
+  expect_equal(colnames(estimator), expected_colnames)
+})
+
+test_that("estimate_sequentially works", {
+  estimators <- estimate_sequentially(dataset = X, verbose = FALSE, max_iter = 100L)
+  expect_type(estimators, "list")
+  expected_colnames <- c(
+    "theta_Ic", "theta_It",
+    "lambda_Ic_r", "lambda_Ic_nr",
+    "lambda_It_r", "lambda_It_nr",
+    "lambda_IcMc_r", "lambda_IcMc_nr",
+    "lambda_ItMc_r", "lambda_ItMc_nr",
+    "lambda_IcMt_r", "lambda_IcMt_nr",
+    "lambda_ItMt_r", "lambda_ItMt_nr",
+    "theta_Ic_info", "theta_It_info",
+    "lambda_Ic_nr_info",
+    "lambda_It_nr_info",
+    "lambda_IcMc_r_info", "lambda_IcMc_nr_info",
+    "lambda_ItMc_r_info", "lambda_ItMc_nr_info",
+    "lambda_IcMt_r_info", "lambda_IcMt_nr_info",
+    "lambda_ItMt_r_info", "lambda_ItMt_nr_info",
+    "n_IcMc", "n_ItMc", "n_IcMt", "n_ItMt",
+    "t_judge"
+  )
+  expect_equal(colnames(estimators), expected_colnames)
+})
