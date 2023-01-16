@@ -22,11 +22,54 @@ resample_dataset <- function (
   return (resampled_dataset)
 }
 
+#' Calculation CI based on bootstrap sampling
+#'
+#' This function is to estimate CI of estimands by bootstrap sampling.
+#' Bootstrap CIs are calculated based on asymptotic normality, two-sided.
+#' One dataset from generate_scenario is used in estimation.
+#'
+#' @param dataset The dataset of one scenario from function generate_scenario.
+#'
+#' @param boot_num The number of bootstrap sampling.
+#'
+#' @param alpha The significance level.
+#'
+#' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
+#'
+#' @param theta_It_init Initial value vectors of proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_nr_init Initial value vectors of hazard of non-responders in induction control.
+#'
+#' @param lambda_It_nr_init Initial value vectors of hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r_init Initial value vectors of hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r_init Initial value vectors of hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r_init Initial value vectors of hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r_init Initial value vectors of hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param max_iter The maximum number of iteration in each EM algorithm.
+#'
+#' @param eps The threshold of difference log-likelihoods to stop EM algorithm.
+#'
+#' @param option If NULL, implement default EM algorithm.
+#' If "fix_theta", implement EM algorithm being theta fixed.
+#'
+#' @export
 estimateEM_bootstrap_ci <- function (
   dataset,
   boot_num = 1000L,
   alpha = 0.05,
-  verbose = TRUE,
   theta_Ic_init = 0.65,
   theta_It_init = 0.75,
   lambda_Ic_nr_init = 0.10,
@@ -47,9 +90,8 @@ estimateEM_bootstrap_ci <- function (
     boot_id
   ) {
     resampled_data <- resample_dataset(dataset)
-    estimator <- estimate_sequentially(
+    estimator <- estimateEM_as_frame(
       resampled_data,
-      verbose = verbose,
       theta_Ic_init = theta_Ic_init,
       theta_It_init = theta_It_init,
       lambda_Ic_nr_init = lambda_Ic_nr_init,
@@ -95,4 +137,114 @@ estimateEM_bootstrap_ci <- function (
   colnames(result) <- c("rmst_Ic", "rmst_It", "hr_Ic", "hr_It", "percentile")
   rownames(result) <- NULL
   return (as.data.frame(result))
+}
+
+#' Calculation CI by sequential execution
+#'
+#' This function is to estimate CI of estimands by sequential execution.
+#' Full dataset from generate_scenario is used in estimation.
+#'
+#' @param dataset The datasets of scenarios from function generate_scenario.
+#'
+#' @param boot_num The number of bootstrap sampling.
+#'
+#' @param alpha The significance level.
+#'
+#' @param verbose If TRUE, show progress.
+#'
+#' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
+#'
+#' @param theta_It_init Initial value vectors of proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_nr_init Initial value vectors of hazard of non-responders in induction control.
+#'
+#' @param lambda_It_nr_init Initial value vectors of hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r_init Initial value vectors of hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r_init Initial value vectors of hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r_init Initial value vectors of hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r_init Initial value vectors of hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param max_iter The maximum number of iteration in each EM algorithm.
+#'
+#' @param eps The threshold of difference log-likelihoods to stop EM algorithm.
+#'
+#' @param option If NULL, implement default EM algorithm.
+#' If "fix_theta", implement EM algorithm being theta fixed.
+#'
+#' @export
+estimate_ci_sequentially <- function (
+  dataset,
+  boot_num = 1000L,
+  alpha = 0.05,
+  verbose = TRUE,
+  theta_Ic_init = 0.65,
+  theta_It_init = 0.75,
+  lambda_Ic_nr_init = 0.10,
+  lambda_It_nr_init = 0.05,
+  lambda_IcMc_r_init = 0.10,
+  lambda_IcMc_nr_init = 0.20,
+  lambda_ItMc_r_init = 0.08,
+  lambda_ItMc_nr_init = 0.16,
+  lambda_IcMt_r_init = 0.08,
+  lambda_IcMt_nr_init = 0.06,
+  lambda_ItMt_r_init = 0.04,
+  lambda_ItMt_nr_init = 0.08,
+  max_iter = 5000L,
+  eps = 1e-5,
+  option = NULL
+) {
+  target_ids <- unique(dataset$id)
+  split_dataset <- lapply(
+    target_ids,
+    function (target_id) {dataset[dataset$id == target_id,]}
+  )
+  ci_func <- function (dataset) {
+    target_id <- dataset$id[1]
+    if (verbose) {
+      cat(target_id, fill = TRUE)
+    }
+    confidence_interval <- estimateEM_bootstrap_ci(
+      dataset,
+      boot_num = boot_num,
+      alpha = alpha,
+      theta_Ic_init = theta_Ic_init,
+      theta_It_init = theta_Ic_init,
+      lambda_Ic_nr_init = lambda_Ic_nr_init,
+      lambda_It_nr_init = lambda_It_nr_init,
+      lambda_IcMc_r_init = lambda_IcMc_r_init,
+      lambda_IcMc_nr_init = lambda_IcMc_nr_init,
+      lambda_ItMc_r_init = lambda_ItMc_r_init,
+      lambda_ItMc_nr_init = lambda_ItMc_nr_init,
+      lambda_IcMt_r_init = lambda_IcMt_r_init,
+      lambda_IcMt_nr_init = lambda_IcMt_nr_init,
+      lambda_ItMt_r_init = lambda_ItMt_r_init,
+      lambda_ItMt_nr_init = lambda_ItMt_nr_init,
+      max_iter = max_iter,
+      eps = eps,
+      option = option
+    )
+    cbind(
+      id = target_id,
+      confidence_interval
+    )
+  }
+
+  # execution
+  confidence_intervals <- lapply(
+    split_dataset, ci_func
+  )
+  result <- Reduce(rbind, confidence_intervals)
+  result
 }

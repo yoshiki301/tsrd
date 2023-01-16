@@ -600,9 +600,9 @@ estimateEM <- function (
 #' This function is to estimate parameters using EM algorithm,
 #' and is the wrapper of estimateEM function.
 #' The return value is data.frame.
-#' Full dataset from generate_scenario is used in estimation.
+#' One dataset from generate_scenario is used in estimation.
 #'
-#' @param dataset The datasets of scenarios from function generate_scenario.
+#' @param dataset The dataset of one scenario from function generate_scenario.
 #'
 #' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
 #'
@@ -811,4 +811,5 @@ estimate_sequentially <- function (
     split_dataset, estimate_func
   )
   result <- Reduce(rbind, estimators)
+  result
 }
