@@ -62,6 +62,9 @@ estimate_parallely <- function (
   eps = 1e-5,
   option = NULL
 ) {
+  # WARNING: this function is about to be removed
+  .Deprecated("estimate_sequentially")
+
   # prepare for parallel computing
   exported_args <- methods::formalArgs(estimateEM)[2:16]
   env <- environment()

@@ -9,13 +9,15 @@ X <- generate_scenario(
 num_cores <- 2L
 if (parallel::detectCores() == 1) { num_cores <- 1 }
 
-test_that("estimate_parallely works", {
-  estimators <- estimate_parallely(
-    dataset = X,
-    num_cores = num_cores,
-    verbose = T,
-    max_iter = 100L
-  )
-  expect_type(estimators, "list")
-  expect_equal(nrow(estimators), 10L)
-})
+# estimate_parallely is deprecated
+
+# test_that("estimate_parallely works", {
+#   estimators <- estimate_parallely(
+#     dataset = X,
+#     num_cores = num_cores,
+#     verbose = T,
+#     max_iter = 100L
+#   )
+#   expect_type(estimators, "list")
+#   expect_equal(nrow(estimators), 10L)
+# })
