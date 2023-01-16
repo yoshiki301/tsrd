@@ -637,7 +637,7 @@ estimateEM <- function (
 #' @export
 estimate_sequentially <- function (
     dataset,
-    verbose = T,
+    verbose = TRUE,
     theta_Ic_init = 0.65,
     theta_It_init = 0.75,
     lambda_Ic_nr_init = 0.10,
@@ -661,7 +661,7 @@ estimate_sequentially <- function (
   )
   estimate_func <- function (dataset) {
     if (verbose) {
-      cat(dataset$id[1], fill = T)
+      cat(dataset$id[1], fill = TRUE)
     }
     n_IcMc <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mc"))
     n_ItMc <- nrow(subset(dataset, induction == "It" & maintenance == "Mc"))

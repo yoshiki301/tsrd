@@ -5,7 +5,7 @@ dataset <- generate_scenario(
 )
 
 test_that("estimateEM_bootstrap_ci works", {
-  boot_ci <- estimateEM_bootstrap_ci(dataset, boot_num = 5L, alpha = 0.05)
+  boot_ci <- estimateEM_bootstrap_ci(dataset, boot_num = 5L, alpha = 0.05, verbose = FALSE)
   expect_equal(nrow(boot_ci), 2)
   expect_equal(ncol(boot_ci), 5)
   expect_equal(boot_ci$percentile, c(0.025, 0.975))

@@ -26,6 +26,7 @@ estimateEM_bootstrap_ci <- function (
   dataset,
   boot_num = 1000L,
   alpha = 0.05,
+  verbose = TRUE,
   theta_Ic_init = 0.65,
   theta_It_init = 0.75,
   lambda_Ic_nr_init = 0.10,
@@ -46,8 +47,9 @@ estimateEM_bootstrap_ci <- function (
     boot_id
   ) {
     resampled_data <- resample_dataset(dataset)
-    estimator <- estimateEM(
+    estimator <- estimate_sequentially(
       resampled_data,
+      verbose = verbose,
       theta_Ic_init = theta_Ic_init,
       theta_It_init = theta_It_init,
       lambda_Ic_nr_init = lambda_Ic_nr_init,
@@ -65,8 +67,8 @@ estimateEM_bootstrap_ci <- function (
       option = option
     )
 
-    rmst <- calc_induction_rmst(estimator, dataset, dataset$t_judge[1])
-    hr <- calc_maintenance_hr(estimator, dataset)
+    rmst <- calc_induction_rmst(estimator, resampled_data, alpha = alpha)
+    hr <- calc_maintenance_hr(estimator, resampled_data, alpha = alpha)
 
     estimands <- data.frame(
       rmst_Ic = rmst$rmst_Ic,
