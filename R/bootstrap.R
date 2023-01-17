@@ -114,9 +114,13 @@ estimateEM_bootstrap_ci <- function (
 
     estimands <- data.frame(
       rmst_Ic = rmst$rmst_Ic,
+      rmst_Ic_true = rmst$rmst_Ic_true,
       rmst_It = rmst$rmst_It,
+      rmst_It_true = rmst$rmst_It_true,
       hr_Ic = hr$hr_Ic,
-      hr_It = hr$hr_It
+      hr_Ic_true = hr$hr_Ic_true,
+      hr_It = hr$hr_It,
+      hr_It_true = hr$hr_It_true
     )
     return (estimands)
   }
@@ -134,7 +138,11 @@ estimateEM_bootstrap_ci <- function (
 
   percentile <- c(lower_percentile, upper_percentile)
   result <- cbind(rbind(lower_quantile, upper_quantile), percentile)
-  colnames(result) <- c("rmst_Ic", "rmst_It", "hr_Ic", "hr_It", "percentile")
+  colnames(result) <- c(
+    "rmst_Ic", "rmst_Ic_true", "rmst_It", "rmst_It_true",
+    "hr_Ic", "hr_Ic_true", "hr_It", "hr_It_true",
+    "percentile"
+  )
   rownames(result) <- NULL
   return (as.data.frame(result))
 }
@@ -247,4 +255,67 @@ estimate_ci_sequentially <- function (
   )
   result <- Reduce(rbind, confidence_intervals)
   result
+}
+
+#' Measure the coverage probability
+#'
+#' This function is to measure the coverage probability.
+#'
+#' @param ci The result of CI calculation.
+#'
+#' @export
+coverage <- function (
+  ci
+) {
+  target_ids <- unique(ci$id)
+  upper <- max(ci$percentile)
+  lower <- min(ci$percentile)
+  coverage_func <- function (target_id) {
+    ci_upper <- subset(ci, id == target_id & percentile == upper)
+    ci_lower <- subset(ci, id == target_id & percentile == lower)
+
+    rmst_Ic_covered <- ifelse(
+      ci_lower$rmst_Ic <= ci_lower$rmst_Ic_true & ci_upper$rmst_Ic_true <= ci_upper$rmst_Ic,
+      1, 0
+    )
+    rmst_Ic_lower <- ifelse(ci_lower$rmst_Ic > ci_lower$rmst_Ic_true, 1, 0)
+    rmst_Ic_upper <- ifelse(ci_upper$rmst_Ic < ci_upper$rmst_Ic_true, 1, 0)
+    rmst_It_covered <- ifelse(
+      ci_lower$rmst_It <= ci_lower$rmst_It_true & ci_upper$rmst_It_true <= ci_upper$rmst_It,
+      1, 0
+    )
+    rmst_It_lower <- ifelse(ci_lower$rmst_It > ci_lower$rmst_It_true, 1, 0)
+    rmst_It_upper <- ifelse(ci_upper$rmst_It < ci_upper$rmst_It_true, 1, 0)
+    hr_Ic_covered <- ifelse(
+      ci_lower$hr_Ic <= ci_lower$hr_Ic_true & ci_upper$hr_Ic_true <= ci_upper$hr_Ic,
+      1, 0
+    )
+    hr_Ic_lower <- ifelse(ci_lower$hr_Ic > ci_lower$hr_Ic_true, 1, 0)
+    hr_Ic_upper <- ifelse(ci_upper$hr_Ic < ci_upper$hr_Ic_true, 1, 0)
+    hr_It_covered <- ifelse(
+      ci_lower$hr_It <= ci_lower$hr_It_true & ci_upper$hr_It_true <= ci_upper$hr_It,
+      1, 0
+    )
+    hr_It_lower <- ifelse(ci_lower$hr_It > ci_lower$hr_It_true, 1, 0)
+    hr_It_upper <- ifelse(ci_upper$hr_It < ci_upper$hr_It_true, 1, 0)
+
+    data.frame(
+      id = target_id,
+      rmst_Ic_covered = rmst_Ic_covered,
+      rmst_Ic_lower = rmst_Ic_lower,
+      rmst_Ic_upper = rmst_Ic_upper,
+      rmst_It_covered = rmst_It_covered,
+      rmst_It_lower = rmst_It_lower,
+      rmst_It_upper = rmst_It_upper,
+      hr_Ic_covered = hr_Ic_covered,
+      hr_Ic_lower = hr_Ic_lower,
+      hr_Ic_upper = hr_Ic_upper,
+      hr_It_covered = hr_It_covered,
+      hr_It_lower = hr_It_lower,
+      hr_It_upper = hr_It_upper
+    )
+  }
+
+  coverage_list <- lapply(target_ids, coverage_func)
+  Reduce(rbind, coverage_list)
 }
