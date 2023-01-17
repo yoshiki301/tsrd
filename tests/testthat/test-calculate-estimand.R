@@ -1,4 +1,3 @@
-# TODO: add test case
 test_that("rmst works", {
   expect_equal( # scalar
     rmst(0.5, 1.0, 6),

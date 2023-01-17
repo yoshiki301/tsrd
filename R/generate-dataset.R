@@ -1,13 +1,15 @@
 adjust_censored_time <- function (
   time,
-  cens
+  cens,
+  seed = 42L
 ) {
+  set.seed(seed = seed)
   if (length(time) != length(cens)) {
     stop("The lengths of time and cens should be equal.")
   }
 
   censored_time <- time[cens == 0]
-  time[cens == 0] <- runif(length(censored_time), 0.0, censored_time)
+  time[cens == 0] <- stats::runif(length(censored_time), 0.0, censored_time)
   return (time)
 }
 

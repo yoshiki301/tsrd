@@ -59,5 +59,6 @@ If "fix_theta", implement EM algorithm being theta fixed.}
 }
 \description{
 This function is to estimate parameters using EM algorithm.
+The return value is list.
 One dataset from generate_scenario is used in estimation.
 }

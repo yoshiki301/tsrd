@@ -215,7 +215,7 @@ calc_parameter_ci <- function (
   fisher_info <- calc_Fisher_information(dataset, parameters)
 
   # CI by normal approximation
-  z <- qnorm(alpha / 2, mean = 0, sd = 1, lower.tail = FALSE)
+  z <- stats::qnorm(alpha / 2, mean = 0, sd = 1, lower.tail = FALSE)
   n <- nrow(dataset)
   if (full_denom) {
     n_Ic <- n
