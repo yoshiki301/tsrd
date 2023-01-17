@@ -116,9 +116,191 @@ calc_loglikelihood_stage2 <- function (
   return (loglikelihood)
 }
 
+calc_Fisher_information <- function (
+  dataset,
+  parameters
+) {
+  # fixed data
+  X_IcMc <- subset(
+    dataset, induction == "Ic" & maintenance == "Mc",
+    select = c(cens, is_induction)
+  )
+  X_ItMc <- subset(
+    dataset, induction == "It" & maintenance == "Mc",
+    select = c(cens, is_induction)
+  )
+  X_IcMt <- subset(
+    dataset, induction == "Ic" & maintenance == "Mt",
+    select = c(cens, is_induction)
+  )
+  X_ItMt <- subset(
+    dataset, induction == "It" & maintenance == "Mt",
+    select = c(cens, is_induction)
+  )
+
+  X_Ic <- rbind(X_IcMc, X_IcMt)
+  X_It <- rbind(X_ItMc, X_ItMt)
+  pi_Ic <- c(parameters$pi_IcMc, parameters$pi_IcMt)
+  pi_It <- c(parameters$pi_ItMc, parameters$pi_ItMt)
+
+  # calculate the Fisher information of theta
+  theta_Ic_info <- sum(
+    (pi_Ic / parameters$theta_Ic^2) +
+    ((1 - pi_Ic) / (1 - parameters$theta_Ic)^2)
+  )
+  theta_It_info <- sum(
+    (pi_It / parameters$theta_It^2) +
+    ((1 - pi_It) / (1 - parameters$theta_It)^2)
+  )
+
+  # calculate the Fisher information of hazard of non-responders in induction
+  lambda_Ic_nr_info <- sum(
+    (1 - pi_Ic) * X_Ic$cens * X_Ic$is_induction / (parameters$lambda_Ic_nr^2)
+  )
+  lambda_It_nr_info <- sum(
+    (1 - pi_It) * X_It$cens * X_It$is_induction / (parameters$lambda_It_nr^2)
+  )
+
+  # calculate the Fisher information of hazard in maintenance
+  lambda_IcMc_r_info <- sum(
+    parameters$pi_IcMc * X_IcMc$cens * (1 - X_IcMc$is_induction) / (parameters$lambda_IcMc_r^2)
+  )
+  lambda_IcMc_nr_info <- sum(
+    (1 - parameters$pi_IcMc) * X_IcMc$cens * (1 - X_IcMc$is_induction) / (parameters$lambda_IcMc_nr^2)
+  )
+  lambda_ItMc_r_info <- sum(
+    parameters$pi_ItMc * X_ItMc$cens * (1 - X_ItMc$is_induction) / (parameters$lambda_ItMc_r^2)
+  )
+  lambda_ItMc_nr_info <- sum(
+    (1 - parameters$pi_ItMc) * X_ItMc$cens * (1 - X_ItMc$is_induction) / (parameters$lambda_ItMc_nr^2)
+  )
+  lambda_IcMt_r_info <- sum(
+    parameters$pi_IcMt * X_IcMt$cens * (1 - X_IcMt$is_induction) / (parameters$lambda_IcMt_r^2)
+  )
+  lambda_IcMt_nr_info <- sum(
+    (1 - parameters$pi_IcMt) * X_IcMt$cens * (1 - X_IcMt$is_induction) / (parameters$lambda_IcMt_nr^2)
+  )
+  lambda_ItMt_r_info <- sum(
+    parameters$pi_ItMt * X_ItMt$cens * (1 - X_ItMt$is_induction) / (parameters$lambda_ItMt_r^2)
+  )
+  lambda_ItMt_nr_info <- sum(
+    (1 - parameters$pi_ItMt) * X_ItMt$cens * (1 - X_ItMt$is_induction) / (parameters$lambda_ItMt_nr^2)
+  )
+
+  # TODO: calculate non-diagonal elements
+
+  result <- list(
+    theta_Ic_info = theta_Ic_info,
+    theta_It_info = theta_It_info,
+    lambda_Ic_nr_info = lambda_Ic_nr_info,
+    lambda_It_nr_info = lambda_It_nr_info,
+    lambda_IcMc_r_info = lambda_IcMc_r_info,
+    lambda_IcMc_nr_info = lambda_IcMc_nr_info,
+    lambda_ItMc_r_info = lambda_ItMc_r_info,
+    lambda_ItMc_nr_info = lambda_ItMc_nr_info,
+    lambda_IcMt_r_info = lambda_IcMt_r_info,
+    lambda_IcMt_nr_info = lambda_IcMt_nr_info,
+    lambda_ItMt_r_info = lambda_ItMt_r_info,
+    lambda_ItMt_nr_info = lambda_ItMt_nr_info
+  )
+  return (result)
+}
+
+calc_parameter_ci <- function (
+  dataset,
+  paramters,
+  alpha = 0.05,
+  full_denom = TRUE
+) {
+  fisher_info <- calc_Fisher_information(dataset, parameters)
+
+  # CI by normal approximation
+  z <- stats::qnorm(alpha / 2, mean = 0, sd = 1, lower.tail = FALSE)
+  n <- nrow(dataset)
+  if (full_denom) {
+    n_Ic <- n
+    n_It <- n
+    n_IcMc <- n
+    n_IcMt <- n
+    n_ItMc <- n
+    n_ItMt <- n
+  } else {
+    n_Ic <- nrow(subset(dataset, induction == "Ic"))
+    n_It <- nrow(subset(dataset, induction == "It"))
+    n_IcMc <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mc"))
+    n_IcMt <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mt"))
+    n_ItMc <- nrow(subset(dataset, induction == "It" & maintenance == "Mc"))
+    n_ItMt <- nrow(subset(dataset, induction == "It" & maintenance == "Mt"))
+  }
+  theta_Ic_ci <- c(
+    paramters$theta_Ic - (z / sqrt(fisher_info$theta_Ic_info * n_Ic)),
+    paramters$theta_Ic + (z / sqrt(fisher_info$theta_Ic_info * n_Ic))
+  )
+  theta_It_ci <- c(
+    paramters$theta_It - (z / sqrt(fisher_info$theta_It_info * n_It)),
+    paramters$theta_It + (z / sqrt(fisher_info$theta_It_info * n_It))
+  )
+  lambda_Ic_nr_ci <- c(
+    paramters$lambda_Ic_nr - (z / sqrt(fisher_info$lambda_Ic_nr_info * n_Ic)),
+    paramters$lambda_Ic_nr + (z / sqrt(fisher_info$lambda_Ic_nr_info * n_Ic))
+  )
+  lambda_It_nr_ci <- c(
+    paramters$lambda_It_nr - (z / sqrt(fisher_info$lambda_It_nr_info * n_It)),
+    paramters$lambda_It_nr + (z / sqrt(fisher_info$lambda_It_nr_info * n_It))
+  )
+  lambda_IcMc_r_ci <- c(
+    paramters$lambda_IcMc_r - (z / sqrt(fisher_info$lambda_IcMc_r_info * n_IcMc)),
+    paramters$lambda_IcMc_r + (z / sqrt(fisher_info$lambda_IcMc_r_info * n_IcMc))
+  )
+  lambda_IcMc_nr_ci <- c(
+    paramters$lambda_IcMc_nr - (z / sqrt(fisher_info$lambda_IcMc_nr_info * n_IcMc)),
+    paramters$lambda_IcMc_nr + (z / sqrt(fisher_info$lambda_IcMc_nr_info * n_IcMc))
+  )
+  lambda_IcMt_r_ci <- c(
+    paramters$lambda_IcMt_r - (z / sqrt(fisher_info$lambda_IcMt_r_info * n_IcMt)),
+    paramters$lambda_IcMt_r + (z / sqrt(fisher_info$lambda_IcMt_r_info * n_IcMt))
+  )
+  lambda_IcMt_nr_ci <- c(
+    paramters$lambda_IcMt_nr - (z / sqrt(fisher_info$lambda_IcMt_nr_info * n_IcMt)),
+    paramters$lambda_IcMt_nr + (z / sqrt(fisher_info$lambda_IcMt_nr_info * n_IcMt))
+  )
+  lambda_ItMc_r_ci <- c(
+    paramters$lambda_ItMc_r - (z / sqrt(fisher_info$lambda_ItMc_r_info * n_ItMc)),
+    paramters$lambda_ItMc_r + (z / sqrt(fisher_info$lambda_ItMc_r_info * n_ItMc))
+  )
+  lambda_ItMc_nr_ci <- c(
+    paramters$lambda_ItMc_nr - (z / sqrt(fisher_info$lambda_ItMc_nr_info * n_ItMc)),
+    paramters$lambda_ItMc_nr + (z / sqrt(fisher_info$lambda_ItMc_nr_info * n_ItMc))
+  )
+  lambda_ItMt_r_ci <- c(
+    paramters$lambda_ItMt_r - (z / sqrt(fisher_info$lambda_ItMt_r_info * n_ItMt)),
+    paramters$lambda_ItMt_r + (z / sqrt(fisher_info$lambda_ItMt_r_info * n_ItMt))
+  )
+  lambda_ItMt_nr_ci <- c(
+    paramters$lambda_ItMt_nr - (z / sqrt(fisher_info$lambda_ItMt_nr_info * n_ItMt)),
+    paramters$lambda_ItMt_nr + (z / sqrt(fisher_info$lambda_ItMt_nr_info * n_ItMt))
+  )
+  result <- list(
+    theta_Ic_ci = theta_Ic_ci,
+    theta_It_ci = theta_It_ci,
+    lambda_Ic_nr_ci = lambda_Ic_nr_ci,
+    lambda_It_nr_ci = lambda_It_nr_ci,
+    lambda_IcMc_r_ci = lambda_IcMc_r_ci,
+    lambda_IcMc_nr_ci = lambda_IcMc_nr_ci,
+    lambda_IcMt_r_ci = lambda_IcMt_r_ci,
+    lambda_IcMt_nr_ci = lambda_IcMt_nr_ci,
+    lambda_ItMc_r_ci = lambda_ItMc_r_ci,
+    lambda_ItMc_nr_ci = lambda_ItMc_nr_ci,
+    lambda_ItMt_r_ci = lambda_ItMt_r_ci,
+    lambda_ItMt_nr_ci = lambda_ItMt_nr_ci
+  )
+  return (result)
+}
+
 #' Parameter estimation using EM algorithm
 #'
 #' This function is to estimate parameters using EM algorithm.
+#' The return value is list.
 #' One dataset from generate_scenario is used in estimation.
 #'
 #' @param dataset The dataset of one scenario from function generate_scenario.
@@ -401,12 +583,233 @@ estimateEM <- function (
 
   loglikelihoods <- loglikelihoods[!is.null(loglikelihoods)]
   step <- length(loglikelihoods) - 1
+  fisher_information <- calc_Fisher_information(dataset, parameters)
 
   return (c(
     list(
       step = step,
       loglikelihood = loglikelihoods
     ),
-    parameters
+    parameters,
+    calc_Fisher_information(dataset, parameters)
   ))
+}
+
+#' Parameter estimation in the form of data.frame
+#'
+#' This function is to estimate parameters using EM algorithm,
+#' and is the wrapper of estimateEM function.
+#' The return value is data.frame.
+#' One dataset from generate_scenario is used in estimation.
+#'
+#' @param dataset The dataset of one scenario from function generate_scenario.
+#'
+#' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
+#'
+#' @param theta_It_init Initial value vectors of proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_nr_init Initial value vectors of hazard of non-responders in induction control.
+#'
+#' @param lambda_It_nr_init Initial value vectors of hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r_init Initial value vectors of hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r_init Initial value vectors of hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r_init Initial value vectors of hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r_init Initial value vectors of hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param max_iter The maximum number of iteration in each EM algorithm.
+#'
+#' @param eps The threshold of difference log-likelihoods to stop EM algorithm.
+#'
+#' @param option If NULL, implement default EM algorithm.
+#' If "fix_theta", implement EM algorithm being theta fixed.
+#'
+#' @export
+estimateEM_as_frame <- function (
+    dataset,
+    theta_Ic_init = 0.65,
+    theta_It_init = 0.75,
+    lambda_Ic_nr_init = 0.10,
+    lambda_It_nr_init = 0.05,
+    lambda_IcMc_r_init = 0.10,
+    lambda_IcMc_nr_init = 0.20,
+    lambda_ItMc_r_init = 0.08,
+    lambda_ItMc_nr_init = 0.16,
+    lambda_IcMt_r_init = 0.08,
+    lambda_IcMt_nr_init = 0.06,
+    lambda_ItMt_r_init = 0.04,
+    lambda_ItMt_nr_init = 0.08,
+    max_iter = 5000L,
+    eps = 1e-5,
+    option = NULL
+) {
+  n_IcMc <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mc"))
+  n_ItMc <- nrow(subset(dataset, induction == "It" & maintenance == "Mc"))
+  n_IcMt <- nrow(subset(dataset, induction == "Ic" & maintenance == "Mt"))
+  n_ItMt <- nrow(subset(dataset, induction == "It" & maintenance == "Mt"))
+  t_judge <- dataset$t_judge[1]
+
+  e <- estimateEM(
+    dataset,
+    theta_Ic_init = theta_Ic_init,
+    theta_It_init = theta_Ic_init,
+    lambda_Ic_nr_init = lambda_Ic_nr_init,
+    lambda_It_nr_init = lambda_It_nr_init,
+    lambda_IcMc_r_init = lambda_IcMc_r_init,
+    lambda_IcMc_nr_init = lambda_IcMc_nr_init,
+    lambda_ItMc_r_init = lambda_ItMc_r_init,
+    lambda_ItMc_nr_init = lambda_ItMc_nr_init,
+    lambda_IcMt_r_init = lambda_IcMt_r_init,
+    lambda_IcMt_nr_init = lambda_IcMt_nr_init,
+    lambda_ItMt_r_init = lambda_ItMt_r_init,
+    lambda_ItMt_nr_init = lambda_ItMt_nr_init,
+    max_iter = max_iter,
+    eps = eps,
+    option = option
+  )
+  estimator <- data.frame(
+    # point estimates
+    theta_Ic = e$theta_Ic,
+    theta_It = e$theta_It,
+    lambda_Ic_r = 0.0,
+    lambda_Ic_nr = e$lambda_Ic_nr,
+    lambda_It_r = 0.0,
+    lambda_It_nr = e$lambda_It_nr,
+    lambda_IcMc_r = e$lambda_IcMc_r,
+    lambda_IcMc_nr = e$lambda_IcMc_nr,
+    lambda_ItMc_r = e$lambda_ItMc_r,
+    lambda_ItMc_nr = e$lambda_ItMc_nr,
+    lambda_IcMt_r = e$lambda_IcMt_r,
+    lambda_IcMt_nr = e$lambda_IcMt_nr,
+    lambda_ItMt_r = e$lambda_ItMt_r,
+    lambda_ItMt_nr = e$lambda_ItMt_nr,
+    # Fisher information
+    theta_Ic_info = e$theta_Ic_info,
+    theta_It_info = e$theta_It_info,
+    lambda_Ic_nr_info = e$lambda_Ic_nr_info,
+    lambda_It_nr_info = e$lambda_It_nr_info,
+    lambda_IcMc_r_info = e$lambda_IcMc_r_info,
+    lambda_IcMc_nr_info = e$lambda_IcMc_nr_info,
+    lambda_ItMc_r_info = e$lambda_ItMc_r_info,
+    lambda_ItMc_nr_info = e$lambda_ItMc_nr_info,
+    lambda_IcMt_r_info = e$lambda_IcMt_r_info,
+    lambda_IcMt_nr_info = e$lambda_IcMt_nr_info,
+    lambda_ItMt_r_info = e$lambda_ItMt_r_info,
+    lambda_ItMt_nr_info = e$lambda_ItMt_nr_info,
+    # sample size
+    n_IcMc = n_IcMc,
+    n_ItMc = n_ItMc,
+    n_IcMt = n_IcMt,
+    n_ItMt = n_ItMt,
+    t_judge = t_judge
+  )
+  return (estimator)
+}
+
+#' Parameter estimation by sequential execution
+#'
+#' This function is to estimate parameters by sequential execution.
+#' Full dataset from generate_scenario is used in estimation.
+#'
+#' @param dataset The datasets of scenarios from function generate_scenario.
+#'
+#' @param verbose If TRUE, show progress.
+#'
+#' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
+#'
+#' @param theta_It_init Initial value vectors of proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_nr_init Initial value vectors of hazard of non-responders in induction control.
+#'
+#' @param lambda_It_nr_init Initial value vectors of hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r_init Initial value vectors of hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r_init Initial value vectors of hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r_init Initial value vectors of hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r_init Initial value vectors of hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param max_iter The maximum number of iteration in each EM algorithm.
+#'
+#' @param eps The threshold of difference log-likelihoods to stop EM algorithm.
+#'
+#' @param option If NULL, implement default EM algorithm.
+#' If "fix_theta", implement EM algorithm being theta fixed.
+#'
+#' @export
+estimate_sequentially <- function (
+    dataset,
+    verbose = TRUE,
+    theta_Ic_init = 0.65,
+    theta_It_init = 0.75,
+    lambda_Ic_nr_init = 0.10,
+    lambda_It_nr_init = 0.05,
+    lambda_IcMc_r_init = 0.10,
+    lambda_IcMc_nr_init = 0.20,
+    lambda_ItMc_r_init = 0.08,
+    lambda_ItMc_nr_init = 0.16,
+    lambda_IcMt_r_init = 0.08,
+    lambda_IcMt_nr_init = 0.06,
+    lambda_ItMt_r_init = 0.04,
+    lambda_ItMt_nr_init = 0.08,
+    max_iter = 5000L,
+    eps = 1e-5,
+    option = NULL
+) {
+  target_ids <- unique(dataset$id)
+  split_dataset <- lapply(
+    target_ids,
+    function (target_id) {dataset[dataset$id == target_id,]}
+  )
+  estimate_func <- function (dataset) {
+    if (verbose) {
+      cat(dataset$id[1], fill = TRUE)
+    }
+    estimateEM_as_frame(
+      dataset,
+      theta_Ic_init = theta_Ic_init,
+      theta_It_init = theta_Ic_init,
+      lambda_Ic_nr_init = lambda_Ic_nr_init,
+      lambda_It_nr_init = lambda_It_nr_init,
+      lambda_IcMc_r_init = lambda_IcMc_r_init,
+      lambda_IcMc_nr_init = lambda_IcMc_nr_init,
+      lambda_ItMc_r_init = lambda_ItMc_r_init,
+      lambda_ItMc_nr_init = lambda_ItMc_nr_init,
+      lambda_IcMt_r_init = lambda_IcMt_r_init,
+      lambda_IcMt_nr_init = lambda_IcMt_nr_init,
+      lambda_ItMt_r_init = lambda_ItMt_r_init,
+      lambda_ItMt_nr_init = lambda_ItMt_nr_init,
+      max_iter = max_iter,
+      eps = eps,
+      option = option
+    )
+  }
+
+  # execution
+  estimators <- lapply(
+    split_dataset, estimate_func
+  )
+  result <- Reduce(rbind, estimators)
+  result
 }
