@@ -221,7 +221,7 @@ calc_maintenance_hr <- function (
   return (result)
 }
 
-calc_estimands_sequentially <- function (
+calc_treatment_effects_sequentially <- function (
   estimators,
   datasets,
   verbose = TRUE,
@@ -231,7 +231,7 @@ calc_estimands_sequentially <- function (
   seed = 42L
 ) {
   ids <- unique(estimators$id)
-  estimands_func <- function (target_id) {
+  effect_func <- function (target_id) {
     if (verbose) {
       cat(target_id, fill = TRUE)
     }
@@ -269,6 +269,54 @@ calc_estimands_sequentially <- function (
     )
   }
 
-  estimands_list <- lapply(ids, estimands_func)
-  Reduce(rbind, estimands_list)
+  effect_list <- lapply(ids, effect_list)
+  Reduce(rbind, effect_list)
+}
+
+calc_coverage_prob <- function (
+  treatment_effects
+) {
+  coverage_frame <- data.frame(
+    rmst_Ic_covered = ifelse(
+      (treatment_effects$rmst_Ic_lower <= treatment_effects$rmst_Ic_true
+       & treatment_effects$rmst_Ic_upper >= treatment_effects$rmst_Ic_true), 1, 0
+    ),
+    rmst_Ic_under = ifelse(
+      treatment_effects$rmst_Ic_lower > treatment_effects$rmst_Ic_true, 1, 0
+    ),
+    rmst_Ic_over = ifelse(
+      treatment_effects$rmst_Ic_upper < treatment_effects$rmst_Ic_true, 1, 0
+    ),
+    rmst_It_covered = ifelse(
+      (treatment_effects$rmst_It_lower <= treatment_effects$rmst_It_true
+       & treatment_effects$rmst_It_upper >= treatment_effects$rmst_It_true), 1, 0
+    ),
+    rmst_It_under = ifelse(
+      treatment_effects$rmst_It_lower > treatment_effects$rmst_It_true, 1, 0
+    ),
+    rmst_It_over = ifelse(
+      treatment_effects$rmst_It_upper < treatment_effects$rmst_It_true, 1, 0
+    ),
+    hr_Ic_covered = ifelse(
+      (treatment_effects$hr_Ic_lower <= treatment_effects$hr_Ic_true
+       & treatment_effects$hr_Ic_upper >= treatment_effects$hr_Ic_true), 1, 0
+    ),
+    hr_Ic_under = ifelse(
+      treatment_effects$hr_Ic_lower > treatment_effects$hr_Ic_true, 1, 0
+    ),
+    hr_Ic_over = ifelse(
+      treatment_effects$hr_Ic_upper < treatment_effects$hr_Ic_true, 1, 0
+    ),
+    hr_It_covered = ifelse(
+      (treatment_effects$hr_It_lower <= treatment_effects$hr_It_true
+       & treatment_effects$hr_It_upper >= treatment_effects$hr_It_true), 1, 0
+    ),
+    hr_It_under = ifelse(
+      treatment_effects$hr_It_lower > treatment_effects$hr_It_true, 1, 0
+    ),
+    hr_It_over = ifelse(
+      treatment_effects$hr_It_upper < treatment_effects$hr_It_true, 1, 0
+    )
+  )
+  colMeans(coverage_frame)
 }
