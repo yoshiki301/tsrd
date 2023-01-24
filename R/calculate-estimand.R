@@ -273,6 +273,17 @@ calc_treatment_effects_sequentially <- function (
   Reduce(rbind, effect_list)
 }
 
+calc_bias <- function (
+  treatment_effects
+) {
+  data.frame(
+    rmst_Ic_bias = treatment_effects$rmst_Ic - treatment_effects$rmst_Ic_true,
+    rmst_It_bias = treatment_effects$rmst_It - treatment_effects$rmst_It_true,
+    hr_Ic_bias = treatment_effects$hr_Ic - treatment_effects$hr_Ic_true,
+    hr_It_bias = treatment_effects$hr_It - treatment_effects$hr_It_true
+  )
+}
+
 calc_coverage_prob <- function (
   treatment_effects
 ) {
