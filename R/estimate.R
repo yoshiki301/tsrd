@@ -707,6 +707,8 @@ estimateEM_as_frame <- function (
     lambda_IcMt_nr_info = e$lambda_IcMt_nr_info,
     lambda_ItMt_r_info = e$lambda_ItMt_r_info,
     lambda_ItMt_nr_info = e$lambda_ItMt_nr_info,
+    # loglikelihood at the last step
+    last_loglikelihood = e$loglikelihood[e$step + 1],
     # sample size
     n_IcMc = n_IcMc,
     n_ItMc = n_ItMc,
@@ -783,10 +785,11 @@ estimate_sequentially <- function (
     function (target_id) {dataset[dataset$id == target_id,]}
   )
   estimate_func <- function (dataset) {
+    target_id <- dataset$id[1]
     if (verbose) {
-      cat(dataset$id[1], fill = TRUE)
+      cat(target_id, fill = TRUE)
     }
-    estimateEM_as_frame(
+    result_frame <- estimateEM_as_frame(
       dataset,
       theta_Ic_init = theta_Ic_init,
       theta_It_init = theta_Ic_init,
@@ -804,6 +807,75 @@ estimate_sequentially <- function (
       eps = eps,
       option = option
     )
+    cbind(list(id = target_id), result_frame)
+  }
+
+  # execution
+  estimators <- lapply(
+    split_dataset, estimate_func
+  )
+  result <- Reduce(rbind, estimators)
+  result
+}
+
+replicate_dataset <- function (
+  original_dataset,
+  replicate_num = 50L
+) {
+  renumber_id_func <- function (new_id) {
+    rep_dataset <- original_dataset
+    rep_dataset$id <- new_id
+    rep_dataset
+  }
+  replicate_ids <- 1:replicate_num
+  replicated_list <- lapply(replicate_ids, renumber_id_func)
+  Reduce(rbind, replicated_list)
+}
+
+estimate_sequentially_max_likelihood <- function (
+  dataset,
+  verbose = TRUE,
+  maximize_num = 50L,
+  max_iter = 5000L,
+  eps = 1e-5,
+  option = NULL
+) {
+  target_ids <- unique(dataset$id)
+  split_dataset <- lapply(
+    target_ids,
+    function (target_id) {dataset[dataset$id == target_id,]}
+  )
+  estimate_func <- function (dataset) {
+    target_id <- dataset$id[1]
+    if (verbose) {
+      cat(target_id, fill = TRUE)
+    }
+
+    # achieve result of the max loglikelihood
+    replicated_datasets <- replicate_dataset(dataset, replicate_num = maximize_num)
+    repeat_estimate <- estimate_sequentially(
+      replicated_datasets,
+      verbose = verbose,
+      theta_Ic_init = runif(maximize_num, 0.2, 0.8),
+      theta_It_init = runif(maximize_num, 0.2, 0.8),
+      lambda_Ic_nr_init = runif(maximize_num, 0.01, 0.20),
+      lambda_It_nr_init = runif(maximize_num, 0.01, 0.20),
+      lambda_IcMc_r_init = runif(maximize_num, 0.01, 0.20),
+      lambda_IcMc_nr_init = runif(maximize_num, 0.01, 0.20),
+      lambda_ItMc_r_init = runif(maximize_num, 0.01, 0.20),
+      lambda_ItMc_nr_init = runif(maximize_num, 0.01, 0.20),
+      lambda_IcMt_r_init = runif(maximize_num, 0.01, 0.20),
+      lambda_IcMt_nr_init = runif(maximize_num, 0.01, 0.20),
+      lambda_ItMt_r_init = runif(maximize_num, 0.01, 0.20),
+      lambda_ItMt_nr_init = runif(maximize_num, 0.01, 0.20),
+      max_iter = max_iter,
+      eps = esp,
+      option = option
+    )
+    max_loglikelihood_index <- which.max(repeat_estimate$last_loglikelihood)
+    max_loglikelihood_row <- subset(repeat_estimate[max_loglikelihood_index,], select = -id)
+
+    cbind(list(id = target_id), max_loglikelihood_row)
   }
 
   # execution

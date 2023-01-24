@@ -192,7 +192,7 @@ estimateEM_bootstrap_ci <- function (
 #' If "fix_theta", implement EM algorithm being theta fixed.
 #'
 #' @export
-estimate_ci_sequentially <- function (
+estimate_boot_ci_sequentially <- function (
   dataset,
   boot_num = 1000L,
   alpha = 0.05,
