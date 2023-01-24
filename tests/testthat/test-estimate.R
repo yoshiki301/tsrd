@@ -230,6 +230,7 @@ test_that("estimate_sequentially works", {
   estimators <- estimate_sequentially(dataset = X, verbose = FALSE, max_iter = 100L)
   expect_type(estimators, "list")
   expected_colnames <- c(
+    "id",
     "theta_Ic", "theta_It",
     "lambda_Ic_r", "lambda_Ic_nr",
     "lambda_It_r", "lambda_It_nr",

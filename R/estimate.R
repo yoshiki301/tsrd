@@ -783,10 +783,11 @@ estimate_sequentially <- function (
     function (target_id) {dataset[dataset$id == target_id,]}
   )
   estimate_func <- function (dataset) {
+    target_id <- dataset$id[1]
     if (verbose) {
-      cat(dataset$id[1], fill = TRUE)
+      cat(target_id, fill = TRUE)
     }
-    estimateEM_as_frame(
+    result_frame <- estimateEM_as_frame(
       dataset,
       theta_Ic_init = theta_Ic_init,
       theta_It_init = theta_Ic_init,
@@ -804,6 +805,7 @@ estimate_sequentially <- function (
       eps = eps,
       option = option
     )
+    cbind(list(id = target_id), result_frame)
   }
 
   # execution
