@@ -220,6 +220,7 @@ test_that("estimateEM_as_frame works", {
     "lambda_ItMc_r_info", "lambda_ItMc_nr_info",
     "lambda_IcMt_r_info", "lambda_IcMt_nr_info",
     "lambda_ItMt_r_info", "lambda_ItMt_nr_info",
+    "last_loglikelihood",
     "n_IcMc", "n_ItMc", "n_IcMt", "n_ItMt",
     "t_judge"
   )
@@ -245,6 +246,7 @@ test_that("estimate_sequentially works", {
     "lambda_ItMc_r_info", "lambda_ItMc_nr_info",
     "lambda_IcMt_r_info", "lambda_IcMt_nr_info",
     "lambda_ItMt_r_info", "lambda_ItMt_nr_info",
+    "last_loglikelihood",
     "n_IcMc", "n_ItMc", "n_IcMt", "n_ItMt",
     "t_judge"
   )
