@@ -16,9 +16,10 @@ sample_mixture_exp <- function (
   range1 = c(0, 1),
   range2 = c(0, 1)
 ) {
-  if (lambda2 <= lambda1) {
-    stop("lambda2 should be greater than lambda1.")
-  }
+  # NOTE: Essentially, the hazard of responders is expected less than that of non-responders.
+  #if (lambda2 <= lambda1) {
+  #  stop("lambda2 should be greater than lambda1.")
+  #}
 
   u <- stats::runif(n)
   is_less <- ifelse(u < theta, 1L, 0L)
