@@ -784,25 +784,25 @@ estimate_sequentially <- function (
     target_ids,
     function (target_id) {dataset[dataset$id == target_id,]}
   )
-  estimate_func <- function (dataset) {
-    target_id <- dataset$id[1]
+  estimate_func <- function (data) {
+    target_id <- data$id[1]
     if (verbose) {
       cat(target_id, fill = TRUE)
     }
     result_frame <- estimateEM_as_frame(
-      dataset,
-      theta_Ic_init = theta_Ic_init,
-      theta_It_init = theta_Ic_init,
-      lambda_Ic_nr_init = lambda_Ic_nr_init,
-      lambda_It_nr_init = lambda_It_nr_init,
-      lambda_IcMc_r_init = lambda_IcMc_r_init,
-      lambda_IcMc_nr_init = lambda_IcMc_nr_init,
-      lambda_ItMc_r_init = lambda_ItMc_r_init,
-      lambda_ItMc_nr_init = lambda_ItMc_nr_init,
-      lambda_IcMt_r_init = lambda_IcMt_r_init,
-      lambda_IcMt_nr_init = lambda_IcMt_nr_init,
-      lambda_ItMt_r_init = lambda_ItMt_r_init,
-      lambda_ItMt_nr_init = lambda_ItMt_nr_init,
+      data,
+      theta_Ic_init = theta_Ic_init[target_id],
+      theta_It_init = theta_Ic_init[target_id],
+      lambda_Ic_nr_init = lambda_Ic_nr_init[target_id],
+      lambda_It_nr_init = lambda_It_nr_init[target_id],
+      lambda_IcMc_r_init = lambda_IcMc_r_init[target_id],
+      lambda_IcMc_nr_init = lambda_IcMc_nr_init[target_id],
+      lambda_ItMc_r_init = lambda_ItMc_r_init[target_id],
+      lambda_ItMc_nr_init = lambda_ItMc_nr_init[target_id],
+      lambda_IcMt_r_init = lambda_IcMt_r_init[target_id],
+      lambda_IcMt_nr_init = lambda_IcMt_nr_init[target_id],
+      lambda_ItMt_r_init = lambda_ItMt_r_init[target_id],
+      lambda_ItMt_nr_init = lambda_ItMt_nr_init[target_id],
       max_iter = max_iter,
       eps = eps,
       option = option
@@ -832,10 +832,65 @@ replicate_dataset <- function (
   Reduce(rbind, replicated_list)
 }
 
+#' Parameter estimation by sequential execution to get max loglikelihood
+#'
+#' This function is to estimate parameters by sequential execution.
+#' Full dataset from generate_scenario is used in estimation.
+#'
+#' @param dataset The datasets of scenarios from function generate_scenario.
+#'
+#' @param verbose If TRUE, show progress.
+#'
+#' @param maximize_num The number of iteration.
+#'
+#' @param theta_Ic_init Initial value vectors of proportion of responders in induction control.
+#'
+#' @param theta_It_init Initial value vectors of proportion of responders in induction treatment.
+#'
+#' @param lambda_Ic_nr_init Initial value vectors of hazard of non-responders in induction control.
+#'
+#' @param lambda_It_nr_init Initial value vectors of hazard of non-responders in induction treatment.
+#'
+#' @param lambda_IcMc_r_init Initial value vectors of hazard of responders in maintenance control when induction control.
+#'
+#' @param lambda_IcMc_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction control.
+#'
+#' @param lambda_ItMc_r_init Initial value vectors of hazard of responders in maintenance treatment when induction control.
+#'
+#' @param lambda_ItMc_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction control.
+#'
+#' @param lambda_IcMt_r_init Initial value vectors of hazard of responders in maintenance control when induction treatment.
+#'
+#' @param lambda_IcMt_nr_init Initial value vectors of hazard of non-responders in maintenance control when induction treatment.
+#'
+#' @param lambda_ItMt_r_init Initial value vectors of hazard of responders in maintenance treatment when induction treatment.
+#'
+#' @param lambda_ItMt_nr_init Initial value vectors of hazard of non-responders in maintenance treatment when induction treatment.
+#'
+#' @param max_iter The maximum number of iteration in each EM algorithm.
+#'
+#' @param eps The threshold of difference log-likelihoods to stop EM algorithm.
+#'
+#' @param option If NULL, implement default EM algorithm.
+#' If "fix_theta", implement EM algorithm being theta fixed.
+#'
+#' @export
 estimate_sequentially_max_likelihood <- function (
   dataset,
   verbose = TRUE,
-  maximize_num = 50L,
+  maximize_num = 100L,
+  theta_Ic_init = rep(0.65, 100L),
+  theta_It_init = rep(0.75, 100L),
+  lambda_Ic_nr_init = rep(0.10, 100L),
+  lambda_It_nr_init = rep(0.05, 100L),
+  lambda_IcMc_r_init = rep(0.10, 100L),
+  lambda_IcMc_nr_init = rep(0.20, 100L),
+  lambda_ItMc_r_init = rep(0.08, 100L),
+  lambda_ItMc_nr_init = rep(0.16, 100L),
+  lambda_IcMt_r_init = rep(0.08, 100L),
+  lambda_IcMt_nr_init = rep(0.06, 100L),
+  lambda_ItMt_r_init = rep(0.04, 100L),
+  lambda_ItMt_nr_init = rep(0.08, 100L),
   max_iter = 5000L,
   eps = 1e-5,
   option = NULL
@@ -856,20 +911,20 @@ estimate_sequentially_max_likelihood <- function (
     repeat_estimate <- estimate_sequentially(
       replicated_datasets,
       verbose = verbose,
-      theta_Ic_init = runif(maximize_num, 0.2, 0.8),
-      theta_It_init = runif(maximize_num, 0.2, 0.8),
-      lambda_Ic_nr_init = runif(maximize_num, 0.01, 0.20),
-      lambda_It_nr_init = runif(maximize_num, 0.01, 0.20),
-      lambda_IcMc_r_init = runif(maximize_num, 0.01, 0.20),
-      lambda_IcMc_nr_init = runif(maximize_num, 0.01, 0.20),
-      lambda_ItMc_r_init = runif(maximize_num, 0.01, 0.20),
-      lambda_ItMc_nr_init = runif(maximize_num, 0.01, 0.20),
-      lambda_IcMt_r_init = runif(maximize_num, 0.01, 0.20),
-      lambda_IcMt_nr_init = runif(maximize_num, 0.01, 0.20),
-      lambda_ItMt_r_init = runif(maximize_num, 0.01, 0.20),
-      lambda_ItMt_nr_init = runif(maximize_num, 0.01, 0.20),
+      theta_Ic_init = theta_Ic_init,
+      theta_It_init = theta_It_init,
+      lambda_Ic_nr_init = lambda_Ic_nr_init,
+      lambda_It_nr_init = lambda_It_nr_init,
+      lambda_IcMc_r_init = lambda_IcMc_r_init,
+      lambda_IcMc_nr_init = lambda_IcMc_nr_init,
+      lambda_ItMc_r_init = lambda_ItMc_r_init,
+      lambda_ItMc_nr_init = lambda_ItMc_nr_init,
+      lambda_IcMt_r_init = lambda_IcMt_r_init,
+      lambda_IcMt_nr_init = lambda_IcMt_nr_init,
+      lambda_ItMt_r_init = lambda_ItMt_r_init,
+      lambda_ItMt_nr_init = lambda_ItMt_nr_init,
       max_iter = max_iter,
-      eps = esp,
+      eps = eps,
       option = option
     )
     max_loglikelihood_index <- which.max(repeat_estimate$last_loglikelihood)

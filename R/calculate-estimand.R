@@ -269,7 +269,7 @@ calc_treatment_effects_sequentially <- function (
     )
   }
 
-  effect_list <- lapply(ids, effect_list)
+  effect_list <- lapply(ids, effect_func)
   Reduce(rbind, effect_list)
 }
 
