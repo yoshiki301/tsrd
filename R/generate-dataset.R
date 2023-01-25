@@ -87,7 +87,7 @@ generate_scenario <- function (
   lambda_ItMt_nr = 0.08,
   seed = 42
 ) {
-  set.seed(seed)
+  #set.seed(seed)
 
   generate_func <- function (sim_id) {
     # sample random variable of time

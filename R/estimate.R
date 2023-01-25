@@ -869,7 +869,7 @@ estimate_sequentially_max_likelihood <- function (
       lambda_ItMt_r_init = runif(maximize_num, 0.01, 0.20),
       lambda_ItMt_nr_init = runif(maximize_num, 0.01, 0.20),
       max_iter = max_iter,
-      eps = esp,
+      eps = eps,
       option = option
     )
     max_loglikelihood_index <- which.max(repeat_estimate$last_loglikelihood)
