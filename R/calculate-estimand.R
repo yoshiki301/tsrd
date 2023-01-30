@@ -67,18 +67,20 @@ calc_induction_rmst <- function (
   lambda_It_nr_var <- variance_matrix[4,4]
   theta_Ic_lambda_Ic_nr_cov <- variance_matrix[1,3]
   theta_It_lambda_It_nr_cov <- variance_matrix[2,4]
+  #theta_Ic_lambda_Ic_nr_cov <- 0.0
+  #theta_It_lambda_It_nr_cov <- 0.0
 
   # calculate each point estimate of RMST
   rmst_Ic <- rmst(theta_Ic, lambda_Ic_nr, t_judge)
   rmst_It <- rmst(theta_It, lambda_It_nr, t_judge)
 
   # calculate variance of RMST by delta method
-  rmst_Ic_var <- (
+  rmst_Ic_var <- abs(
     theta_Ic_var * (rmst_p_theta(theta_Ic, lambda_Ic_nr, t_judge))^2 +
     lambda_Ic_nr_var * (rmst_p_lambda(theta_Ic, lambda_Ic_nr, t_judge))^2 +
     2 * theta_Ic_lambda_Ic_nr_cov * rmst_p2_theta_lambda(theta_Ic, lambda_Ic_nr, t_judge)
   )
-  rmst_It_var <- (
+  rmst_It_var <- abs(
     theta_It_var * (rmst_p_theta(theta_It, lambda_It_nr, t_judge))^2 +
     lambda_It_nr_var * (rmst_p_lambda(theta_It, lambda_It_nr, t_judge))^2 +
     2 * theta_It_lambda_It_nr_cov * rmst_p2_theta_lambda(theta_It, lambda_It_nr, t_judge)
@@ -176,18 +178,20 @@ calc_maintenance_hr <- function (
   lambda_ItMt_r_var <- variance_matrix[11,11]
   lambda_IcMc_r_lambda_IcMt_r_cov <- variance_matrix[5,9]
   lambda_ItMc_r_lambda_ItMt_r_cov <- variance_matrix[7,11]
+  #lambda_IcMc_r_lambda_IcMt_r_cov <- 0.0
+  #lambda_ItMc_r_lambda_ItMt_r_cov <- 0.0
 
   # calculate each point estimate of hazard ratio
   hr_Ic <- hr(lambda_IcMt_r, lambda_IcMc_r)
   hr_It <- hr(lambda_ItMt_r, lambda_ItMc_r)
 
   # calculate variance of hazard ratio by delta method
-  hr_Ic_var <- (
+  hr_Ic_var <- abs(
     lambda_IcMc_r_var * (hr_p_lambda_IMc(lambda_IcMt_r, lambda_IcMc_r))^2 +
     lambda_IcMt_r_var * (hr_p_lambda_IMt(lambda_IcMt_r, lambda_IcMc_r))^2 +
     2 * lambda_IcMc_r_lambda_IcMt_r_cov * hr_p2_lambda_IMt_lambda_IMc(lambda_IcMt_r, lambda_IcMc_r)
   )
-  hr_It_var <- (
+  hr_It_var <- abs(
     lambda_ItMc_r_var * (hr_p_lambda_IMc(lambda_ItMt_r, lambda_ItMc_r))^2 +
     lambda_ItMt_r_var * (hr_p_lambda_IMt(lambda_ItMt_r, lambda_ItMc_r))^2 +
     2 * lambda_ItMc_r_lambda_ItMt_r_cov * hr_p2_lambda_IMt_lambda_IMc(lambda_ItMt_r, lambda_ItMc_r)

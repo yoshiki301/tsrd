@@ -26,7 +26,7 @@ generate_scenario(
   lambda_IcMt_nr = 0.16,
   lambda_ItMt_r = 0.04,
   lambda_ItMt_nr = 0.08,
-  seed = 42
+  seed = 42L
 )
 }
 \arguments{

@@ -85,11 +85,13 @@ generate_scenario <- function (
   lambda_IcMt_nr = 0.16,
   lambda_ItMt_r = 0.04,
   lambda_ItMt_nr = 0.08,
-  seed = 42
+  seed = 42L
 ) {
-  set.seed(seed)
+  seeds <- (1L:sim_num) + seed
 
   generate_func <- function (sim_id) {
+    set.seed(seeds[sim_id])
+
     # sample random variable of time
     # This is ideal time, observation is censored or not
     t_IcMc <- sample_tsrd_dataset(

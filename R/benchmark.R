@@ -91,3 +91,36 @@ rmst_parametric <- function (
 ) {
   stats::pexp(t_judge, lambda) / lambda
 }
+
+benchmark <- function (
+  dataset
+) {
+  nonpara <- nonpara_benchmark(dataset)
+  para <- para_benchmark(dataset)
+  list(
+    rmst_Ic_km = nonpara$rmst_Ic,
+    rmst_It_km = nonpara$rmst_It,
+    hr_Ic_cox = nonpara$hr_Ic,
+    hr_It_cox = nonpara$hr_It,
+    rmst_Ic_exp = para$rmst_Ic,
+    rmst_It_exp = para$rmst_It,
+    hr_Ic_exp = para$hr_Ic,
+    hr_It_exp = para$hr_It
+  )
+}
+
+add_benchmark_column <- function (
+  datasets,
+  treatment_effects
+) {
+  ids <- unique(datasets$id)
+  add_func <- function (target_id) {
+    dataset <- datasets[datasets$id == target_id,]
+    benchmark_col <- benchmark(dataset)
+    treatment_effect <- treatment_effects[treatment_effects$id == target_id,]
+    cbind(treatment_effect, benchmark_col)
+  }
+
+  add_list <- lapply(ids, add_func)
+  Reduce(rbind, add_list)
+}
