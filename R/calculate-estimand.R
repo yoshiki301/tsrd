@@ -58,7 +58,9 @@ calc_induction_rmst <- function (
     seed = seed
   )
   fisher_infomation <- fisher_information_monte_carlo(pseudo_datasets, estimators)
-  variance_matrix <- solve(fisher_infomation, tol = 1e-100)
+  # add delta
+  fisher_infomation <- fisher_infomation + diag(rep(1, 12))
+  variance_matrix <- solve(fisher_infomation, tol = 1e-150)
 
   # get variance/covariance associated with RMST
   theta_Ic_var <- variance_matrix[1,1]
@@ -232,7 +234,8 @@ calc_treatment_effects_sequentially <- function (
   alpha = 0.05,
   monte_carlo_num = 100L,
   pseudo_data_censor_rate = 0.0,
-  seed = 42L
+  seed = 42L,
+  option = NULL
 ) {
   ids <- unique(estimators$id)
   effect_func <- function (target_id) {
@@ -273,7 +276,13 @@ calc_treatment_effects_sequentially <- function (
     )
   }
 
-  effect_list <- lapply(ids, effect_func)
+  if (is.null(option)) {
+    effect_list <- lapply(ids, effect_func)
+  } else if (option == "parallel") {
+    effect_list <- parallel::mclapply(
+      ids, effect_func
+    )
+  }
   Reduce(rbind, effect_list)
 }
 

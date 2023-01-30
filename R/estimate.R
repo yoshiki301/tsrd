@@ -811,9 +811,15 @@ estimate_sequentially <- function (
   }
 
   # execution
-  estimators <- lapply(
-    split_dataset, estimate_func
-  )
+  if (is.null(option)) {
+    estimators <- lapply(
+      split_dataset, estimate_func
+    )
+  } else if (option == "parallel") {
+    estimators <- parallel::mclapply(
+      split_dataset, estimate_func
+    )
+  }
   result <- Reduce(rbind, estimators)
   result
 }

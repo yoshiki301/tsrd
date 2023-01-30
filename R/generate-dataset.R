@@ -22,6 +22,8 @@ adjust_censored_time <- function (
 #'
 #' @param t_judge The time to judge whether to be responder or not.
 #'
+#' @param t_max The time of the end of trial.
+#'
 #' @param censor_rate The proportion of censoring.
 #'
 #' @param IcMc_size The sample size of induction control and maintenance control.
@@ -66,6 +68,7 @@ adjust_censored_time <- function (
 generate_scenario <- function (
   sim_num = 1000L,
   t_judge = 6,
+  t_max = 60,
   censor_rate = 0.0,
   IcMc_size = 1000L,
   ItMc_size = 1000L,
@@ -127,12 +130,23 @@ generate_scenario <- function (
     obs_IcMt <- adjust_censored_time(t_IcMt, cens_IcMt)
     obs_ItMt <- adjust_censored_time(t_ItMt, cens_ItMt)
 
+    # set censoring at the end of trial
+    obs_IcMc <- ifelse(obs_IcMc <= t_max, obs_IcMc, t_max)
+    cens_IcMc <- ifelse(obs_IcMc < t_max, cens_IcMc, 0L)
+    obs_ItMc <- ifelse(obs_ItMc <= t_max, obs_ItMc, t_max)
+    cens_ItMc <- ifelse(obs_ItMc < t_max, cens_ItMc, 0L)
+    obs_IcMt <- ifelse(obs_IcMt <= t_max, obs_IcMt, t_max)
+    cens_IcMt <- ifelse(obs_IcMt < t_max, cens_IcMt, 0L)
+    obs_ItMt <- ifelse(obs_ItMt <= t_max, obs_ItMt, t_max)
+    cens_ItMt <- ifelse(obs_ItMt < t_max, cens_ItMt, 0L)
+
     # make a scenario data as data.frame
     data_IcMc <- data.frame(
       id = sim_id,
       time = obs_IcMc,
       cens = cens_IcMc,
       t_judge = t_judge,
+      t_max = t_max,
       is_induction = ifelse(obs_IcMc <= t_judge, 1L, 0L),
       induction = "Ic",
       maintenance = "Mc",
@@ -147,6 +161,7 @@ generate_scenario <- function (
       time = obs_ItMc,
       cens = cens_ItMc,
       t_judge = t_judge,
+      t_max = t_max,
       is_induction = ifelse(obs_ItMc <= t_judge, 1L, 0L),
       induction = "It",
       maintenance = "Mc",
@@ -161,6 +176,7 @@ generate_scenario <- function (
       time = obs_IcMt,
       cens = cens_IcMt,
       t_judge = t_judge,
+      t_max = t_max,
       is_induction = ifelse(obs_IcMt <= t_judge, 1L, 0L),
       induction = "Ic",
       maintenance = "Mt",
@@ -175,6 +191,7 @@ generate_scenario <- function (
       time = obs_ItMt,
       cens = cens_ItMt,
       t_judge = t_judge,
+      t_max = t_max,
       is_induction = ifelse(obs_ItMt <= t_judge, 1L, 0L),
       induction = "It",
       maintenance = "Mt",
