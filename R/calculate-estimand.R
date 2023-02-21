@@ -59,8 +59,11 @@ calc_induction_rmst <- function (
   )
   fisher_infomation <- fisher_information_monte_carlo(pseudo_datasets, estimators)
   # add delta
-  fisher_infomation <- fisher_infomation + diag(rep(1, 12))
-  variance_matrix <- solve(fisher_infomation, tol = 1e-150)
+  fisher_infomation <- fisher_infomation
+  variance_matrix <- try(solve(fisher_infomation, tol = 1e-100), silent = TRUE)
+  if (class(variance_matrix) == "try-error") {
+    variance_matrix <- diag(rep(NaN, 12))
+  }
 
   # get variance/covariance associated with RMST
   theta_Ic_var <- variance_matrix[1,1]
@@ -171,7 +174,10 @@ calc_maintenance_hr <- function (
     seed = seed
   )
   fisher_infomation <- fisher_information_monte_carlo(pseudo_datasets, estimators)
-  variance_matrix <- solve(fisher_infomation, tol = 1e-100)
+  variance_matrix <- try(solve(fisher_infomation, tol = 1e-100), silent = TRUE)
+  if (class(variance_matrix) == "try-error") {
+    variance_matrix <- diag(rep(NaN, 12))
+  }
 
   # get variance/covariance associated with RMST
   lambda_IcMc_r_var <- variance_matrix[5,5]
